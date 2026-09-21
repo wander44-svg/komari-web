@@ -1,0 +1,35 @@
+name: Build Komari Web 1.4.3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 1.4.3
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: 1.4.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: komari-web-1.4.3-dist
+          path: dist
