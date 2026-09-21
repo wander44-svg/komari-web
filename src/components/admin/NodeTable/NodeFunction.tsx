@@ -86,10 +86,25 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
 
   const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        if (!document.execCommand("copy")) {
+          throw new Error("Clipboard copy was rejected");
+        }
+        textarea.remove();
+      }
       toast.success(t("copy_success", "已复制到剪贴板"));
     } catch (err) {
       console.error("Failed to copy text: ", err);
+      toast.error(t("copy_failed", "复制失败"));
     }
   };
 

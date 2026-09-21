@@ -1,5 +1,4 @@
 import {
-  quotePowerShellArg,
   quoteShellArg,
   quoteShellArgs,
 } from "@/utils/shellQuote";
@@ -76,6 +75,28 @@ import { formatBytes, stringToBytes } from "@/utils/unitHelper";
 import PriceTags from "@/components/PriceTags";
 import Loading from "@/components/loading";
 import Tips from "@/components/ui/tips";
+
+async function copyTextToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    if (!document.execCommand("copy")) {
+      throw new Error("Clipboard copy was rejected");
+    }
+  } finally {
+    textarea.remove();
+  }
+}
 import {
   SettingCardCollapse,
   SettingCardSelect,
@@ -361,11 +382,8 @@ const AutoDiscoverySection = ({
       args.push(rotateVal);
     }
 
-    let scriptFile = "install.sh";
-    if (selectedPlatform === "windows") {
-      scriptFile = "install.ps1";
-    }
-    let scriptUrl = `https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/${scriptFile}`;
+    let scriptUrl =
+      "https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-agent-1.2.60/install.sh";
     if (enableGhproxy && ghproxy) {
       scriptUrl = scriptUrl.slice(8); // 去掉 https://
       if (ghproxy.endsWith("/")) {
@@ -378,63 +396,29 @@ const AutoDiscoverySection = ({
       }
     }
 
-    let finalCommand = "";
-    switch (selectedPlatform) {
-      case "linux":
-        finalCommand =
-          `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
-          quoteShellArgs(args);
-        break;
-      case "windows":
-        finalCommand =
-          `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ` +
-          `"iwr ${quotePowerShellArg(scriptUrl)}` +
-          ` -UseBasicParsing -OutFile 'install.ps1'; &` +
-          ` '.\\install.ps1'`;
-        args.forEach((arg) => {
-          finalCommand += ` ${quotePowerShellArg(arg)}`;
-        });
-        finalCommand += `"`;
-        break;
-      case "macos":
-        finalCommand =
-          `zsh <(curl -sL ${quoteShellArg(scriptUrl)}) ` +
-          quoteShellArgs(args);
-        break;
-      case "docker": {
-        // Docker 运行时不支持安装脚本专用参数，剔除它们及其取值
-        const installOnlyFlags = [
-          "--install-ghproxy",
-          "--install-dir",
-          "--install-service-name",
-          "--install-version",
-        ];
-        const dockerArgs: string[] = [];
-        for (let i = 0; i < args.length; i++) {
-          if (installOnlyFlags.includes(args[i])) {
-            i++; // 跳过该标志的取值
-            continue;
-          }
-          dockerArgs.push(args[i]);
-        }
-        // 自动发现会在 /app/auto-discovery.json 写入注册得到的 uuid/token，
-        // 通过 bind mount 持久化该文件，容器更新重建后复用同一身份，避免重复注册。
-        // 注意：文件挂载要求宿主机上文件已存在，否则 Docker 会将其创建为目录。
-        finalCommand =
-          `touch .komari-auto-discovery.json && ` +
-          `docker run -d --name komari-agent --restart=always ` +
-          `-v .komari-auto-discovery.json:/app/auto-discovery.json ` +
-          `ghcr.io/komari-monitor/komari-agent:latest ` +
-          quoteShellArgs(dockerArgs);
-        break;
-      }
-    }
-    return finalCommand;
+    return (
+      `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
+      quoteShellArgs(args)
+    );
   };
 
   const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        if (!document.execCommand("copy")) {
+          throw new Error("Clipboard copy was rejected");
+        }
+        textarea.remove();
+      }
       toast.success(t("copy_success", "已复制到剪贴板"));
     } catch (err) {
       console.error("Failed to copy text: ", err);
@@ -503,9 +487,6 @@ const AutoDiscoverySection = ({
         onValueChange={(value) => setSelectedPlatform(value as Platform)}
       >
         <SegmentedControl.Item value="linux">Linux</SegmentedControl.Item>
-        <SegmentedControl.Item value="windows">Windows</SegmentedControl.Item>
-        <SegmentedControl.Item value="macos">macOS</SegmentedControl.Item>
-        <SegmentedControl.Item value="docker">Docker</SegmentedControl.Item>
       </SegmentedControl.Root>
 
       <Flex gap="2" align="center">
@@ -1159,9 +1140,14 @@ const SortableRow = ({
     transform: CSS.Transform.toString(transform),
     transition,
   };
-  function copy(text: string) {
-    navigator.clipboard.writeText(text);
-    toast.success(t("copy_success"));
+  async function copy(text: string) {
+    try {
+      await copyTextToClipboard(text);
+      toast.success(t("copy_success"));
+    } catch (error) {
+      console.error("Failed to copy text: ", error);
+      toast.error(t("copy_failed", "复制失败"));
+    }
   }
   return (
     <TableRow ref={setNodeRef} style={style} className="hover:bg-accent-a2">
@@ -1427,7 +1413,7 @@ const NodeTable = ({
   );
 };
 
-type Platform = "linux" | "windows" | "macos" | "docker";
+type Platform = "linux";
 const ActionButtons = ({
   node,
   settings,
@@ -1659,12 +1645,8 @@ function GenerateCommandButton({
       args.push(`--month-rotate`);
       args.push(rotateVal);
     }
-    let scriptFile = "install.sh";
-    if (selectedPlatform === "windows") {
-      scriptFile = "install.ps1";
-    }
     let scriptUrl =
-      `https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/${scriptFile}`;
+      "https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-agent-1.2.60/install.sh";
     if (enableGhproxy) {
       if (enableGhproxy && ghproxy) {
         scriptUrl = scriptUrl.slice(8); // 去掉 https://
@@ -1678,57 +1660,29 @@ function GenerateCommandButton({
         }
       }
     }
-    let finalCommand = "";
-    switch (selectedPlatform) {
-      case "linux":
-        finalCommand =
-          `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
-          quoteShellArgs(args);
-        break;
-      case "windows":
-        finalCommand =
-          `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ` +
-          `"iwr ${quotePowerShellArg(scriptUrl)}` +
-          ` -UseBasicParsing -OutFile 'install.ps1'; &` +
-          ` '.\\install.ps1'`;
-        args.forEach((arg) => {
-          finalCommand += ` ${quotePowerShellArg(arg)}`;
-        });
-        finalCommand += `"`;
-        break;
-      case "macos":
-        finalCommand =
-          `zsh <(curl -sL ${quoteShellArg(scriptUrl)}) ` + quoteShellArgs(args);
-        break;
-      case "docker": {
-        // Docker 运行时不支持安装脚本专用参数，剔除它们及其取值
-        const installOnlyFlags = [
-          "--install-ghproxy",
-          "--install-dir",
-          "--install-service-name",
-          "--install-version",
-        ];
-        const dockerArgs: string[] = [];
-        for (let i = 0; i < args.length; i++) {
-          if (installOnlyFlags.includes(args[i])) {
-            i++; // 跳过该标志的取值
-            continue;
-          }
-          dockerArgs.push(args[i]);
-        }
-        finalCommand =
-          `docker run -d --name komari-agent --restart=always ` +
-          `ghcr.io/komari-monitor/komari-agent:latest ` +
-          quoteShellArgs(dockerArgs);
-        break;
-      }
-    }
-    return finalCommand;
+    return (
+      `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
+      quoteShellArgs(args)
+    );
   };
 
   const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        if (!document.execCommand("copy")) {
+          throw new Error("Clipboard copy was rejected");
+        }
+        textarea.remove();
+      }
       toast.success(t("copy_success", "已复制到剪贴板"));
     } catch (err) {
       console.error("Failed to copy text: ", err);
@@ -1752,11 +1706,6 @@ function GenerateCommandButton({
             onValueChange={(value) => setSelectedPlatform(value as Platform)}
           >
             <SegmentedControl.Item value="linux">Linux</SegmentedControl.Item>
-            <SegmentedControl.Item value="windows">
-              Windows
-            </SegmentedControl.Item>
-            <SegmentedControl.Item value="macos">macOS</SegmentedControl.Item>
-            <SegmentedControl.Item value="docker">Docker</SegmentedControl.Item>
           </SegmentedControl.Root>
 
           <Flex direction="column" gap="2">
@@ -2586,9 +2535,7 @@ function DetailView({ node }: { node: NodeDetail }) {
                         variant="ghost"
                         className="size-5"
                         type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(node.ipv4!);
-                        }}
+                        onClick={() => copyTextToClipboard(node.ipv4!)}
                       >
                         <Copy size={16} />
                       </IconButton>
@@ -2606,9 +2553,7 @@ function DetailView({ node }: { node: NodeDetail }) {
                         variant="ghost"
                         className="size-5"
                         type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(node.ipv6!);
-                        }}
+                        onClick={() => copyTextToClipboard(node.ipv6!)}
                       >
                         <Copy size={16} />
                       </IconButton>
