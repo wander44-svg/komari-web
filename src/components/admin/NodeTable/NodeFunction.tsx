@@ -87,7 +87,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     switch (selectedPlatform) {
       case "linux":
         finalCommand =
-          `wget -qO- https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.sh | sudo bash -s -- ` +
+          `wget -qO- https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-agent-1.2.60/install.sh | sudo bash -s -- ` +
           quoteShellArgs(args);
         break;
       case "windows":
