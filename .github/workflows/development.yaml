@@ -1,9 +1,8 @@
 name: Development Environment
 
 on:
-  # Temporarily disabled
-  # push:
-  #   branches: [main]
+  push:
+    branches: [komari-optimal]
   # pull_request:
   #   branches: [main]
   workflow_dispatch:
