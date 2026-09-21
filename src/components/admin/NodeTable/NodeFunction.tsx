@@ -6,14 +6,13 @@ import { Terminal, Trash2, Copy, Download, DollarSign } from "lucide-react";
 import { t } from "i18next";
 import type { Row } from "@tanstack/react-table";
 import { EditDialog } from "./NodeEditDialog";
-import { quotePowerShellArg, quoteShellArgs } from "@/utils/shellQuote";
+import { quoteShellArgs } from "@/utils/shellQuote";
 import {
   Button,
   Checkbox,
   Dialog,
   Flex,
   IconButton,
-  SegmentedControl,
   TextArea,
   TextField,
 } from "@radix-ui/themes";
@@ -34,13 +33,9 @@ type InstallOptions = {
   serviceName: string;
 };
 
-type Platform = "linux" | "windows" | "macos";
-
 export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
   const refreshTable = React.useContext(DataTableRefreshContext);
   const [removing, setRemoving] = React.useState(false);
-  const [selectedPlatform, setSelectedPlatform] =
-    React.useState<Platform>("linux");
   const [installOptions, setInstallOptions] = React.useState<InstallOptions>({
     disableWebSsh: false,
     disableAutoUpdate: false,
@@ -83,31 +78,10 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
       args.push(serviceName);
     }
 
-    let finalCommand = "";
-    switch (selectedPlatform) {
-      case "linux":
-        finalCommand =
-          `wget -qO- https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-agent-1.2.60/install.sh | sudo bash -s -- ` +
-          quoteShellArgs(args);
-        break;
-      case "windows":
-        finalCommand =
-          `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ` +
-          `"iwr 'https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.ps1'` +
-          ` -UseBasicParsing -OutFile 'install.ps1'; &` +
-          ` '.\\install.ps1'`;
-        args.forEach((arg) => {
-          finalCommand += ` ${quotePowerShellArg(arg)}`;
-        });
-        finalCommand += `"`;
-        break;
-      case "macos":
-        finalCommand =
-          `zsh <(curl -sL https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.sh) ` +
-          quoteShellArgs(args);
-        break;
-    }
-    return finalCommand;
+    return (
+      `wget -qO- https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-agent-1.2.60/install.sh | sudo bash -s -- ` +
+      quoteShellArgs(args)
+    );
   };
 
   const copyToClipboard = async (text: string) => {
@@ -136,17 +110,6 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
             {t("admin.nodeTable.installCommand", "一键部署指令")}
           </Dialog.Title>
           <div className="flex flex-col gap-4">
-            <SegmentedControl.Root
-              value={selectedPlatform}
-              onValueChange={(value) => setSelectedPlatform(value as Platform)}
-            >
-              <SegmentedControl.Item value="linux">Linux</SegmentedControl.Item>
-              <SegmentedControl.Item value="windows">
-                Windows
-              </SegmentedControl.Item>
-              <SegmentedControl.Item value="macos">macOS</SegmentedControl.Item>
-            </SegmentedControl.Root>
-
             <Flex direction="column" gap="2">
               <label className="text-base font-bold">
                 {t("admin.nodeTable.installOptions", "安装选项")}
@@ -365,4 +328,3 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     </div>
   );
 }
-
