@@ -30,7 +30,6 @@ import {
   Plus,
   Radar,
   Settings,
-  Terminal,
   Trash2Icon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -86,9 +85,13 @@ async function copyTextToClipboard(text: string): Promise<void> {
   textarea.value = text;
   textarea.setAttribute("readonly", "");
   textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "0";
   textarea.style.opacity = "0";
   document.body.appendChild(textarea);
+  textarea.focus();
   textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
   try {
     if (!document.execCommand("copy")) {
       throw new Error("Clipboard copy was rejected");
@@ -118,7 +121,7 @@ const NodeDetailsPage = () => {
 
 const Layout = () => {
   const { nodeDetail, isLoading, error, refresh } = useNodeDetails();
-  const { settings, loading: settingsLoading } = useSettings();
+  const { settings } = useSettings();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
   const filteredNodes = Array.isArray(nodeDetail)
@@ -145,8 +148,7 @@ const Layout = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         selectedNodes={selectedNodes}
-        settings={settings}
-        settingsLoading={settingsLoading}
+        
       />
 
       {isEmpty ? (
@@ -240,7 +242,7 @@ function useIsSnapshotBackend() {
   return isSnapshotBackend;
 }
 
-const AutoDiscoverySection = ({
+export const AutoDiscoverySection = ({
   settings,
   loading,
 }: {
@@ -404,21 +406,7 @@ const AutoDiscoverySection = ({
 
   const copyToClipboard = async (text: string) => {
     try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.setAttribute("readonly", "");
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        if (!document.execCommand("copy")) {
-          throw new Error("Clipboard copy was rejected");
-        }
-        textarea.remove();
-      }
+      await copyTextToClipboard(text);
       toast.success(t("copy_success", "已复制到剪贴板"));
     } catch (err) {
       console.error("Failed to copy text: ", err);
@@ -1036,14 +1024,10 @@ const Header = ({
   searchTerm,
   setSearchTerm,
   selectedNodes,
-  settings,
-  settingsLoading,
 }: {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   selectedNodes: string[];
-  settings: any;
-  settingsLoading: boolean;
 }) => {
   const { t } = useTranslation();
   const { refresh } = useNodeDetails();
@@ -1108,10 +1092,6 @@ const Header = ({
                 {t("admin.nodeTable.addNode")}
               </Button>
             </Flex>
-            <AutoDiscoverySection
-              settings={settings}
-              loading={settingsLoading}
-            />
           </Dialog.Content>
         </Dialog.Root>
       </Flex>
@@ -1423,7 +1403,6 @@ const ActionButtons = ({
   settings: any;
   isSnapshotBackend: boolean;
 }) => {
-  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-4">
       <GenerateCommandButton
@@ -1431,15 +1410,6 @@ const ActionButtons = ({
         settings={settings}
         isSnapshotBackend={isSnapshotBackend}
       />
-      <IconButton
-        title={t("terminal.title")}
-        variant="ghost"
-        onClick={() => {
-          window.open(`/terminal?uuid=${node.uuid}`, "_blank");
-        }}
-      >
-        <Terminal size="18" />
-      </IconButton>
       <EditButton node={node} />
       <BillingButton node={node} />
       <DeleteButton node={node} />
@@ -1668,21 +1638,7 @@ function GenerateCommandButton({
 
   const copyToClipboard = async (text: string) => {
     try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.setAttribute("readonly", "");
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        if (!document.execCommand("copy")) {
-          throw new Error("Clipboard copy was rejected");
-        }
-        textarea.remove();
-      }
+      await copyTextToClipboard(text);
       toast.success(t("copy_success", "已复制到剪贴板"));
     } catch (err) {
       console.error("Failed to copy text: ", err);

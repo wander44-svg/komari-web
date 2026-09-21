@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import "github-markdown-css/github-markdown.css";
 import Loading from "@/components/loading";
 import { useTranslation } from "react-i18next";
 import { SquareArrowOutUpRight } from "lucide-react";
@@ -60,7 +57,6 @@ export default function AboutPage() {
       "@types/uuid",
       "class-variance-authority",
       "clsx",
-      "github-markdown-css",
       "http-proxy-middleware",
       "i18next",
       "i18next-browser-languagedetector",
@@ -69,10 +65,8 @@ export default function AboutPage() {
       "react",
       "react-dom",
       "react-i18next",
-      "react-markdown",
       "react-toastify",
       "recharts",
-      "remark-gfm",
       "sonner",
       "tailwind-merge",
       "tailwindcss",
@@ -80,10 +74,6 @@ export default function AboutPage() {
       "twemoji",
       "uuid",
       "vaul",
-      "@xterm/xterm",
-      "@xterm/addon-fit",
-      "@xterm/addon-search",
-      "@xterm/addon-web-links",
       "@eslint/js",
       "@types/lodash",
       "@types/react",
@@ -183,10 +173,7 @@ export default function AboutPage() {
               <>
                 <div className="km-about-changelog markdown-body border border-muted/20 rounded-md">
                   {markdown ? (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      children={markdown}
-                    />
+                    <pre className="whitespace-pre-wrap text-wrap p-4">{markdown}</pre>
                   ) : (
                     <Loading />
                   )}

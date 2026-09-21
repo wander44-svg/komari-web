@@ -254,29 +254,6 @@ export default function SiteSettings() {
           </div>
         </div>
       </SettingCardCollapse>
-      <SettingCardLabel>{t("settings.site.custom")}</SettingCardLabel>
-      <label className="text-sm text-muted-foreground -mt-4">
-        {t("settings.custom.note")}
-      </label>
-      <SettingCardLongTextInput
-        title={t("settings.custom.header")}
-        description={t("settings.custom.header_description")}
-        defaultValue={settings.custom_head || ""}
-        OnSave={async (data) => {
-          await updateSettingsWithToast({ custom_head: data }, t);
-        }}
-      />
-      <SettingCardLongTextInput
-        title={t("settings.custom.body", "自定义 Body")}
-        description={t(
-          "settings.custom.body_description",
-          "在页面底部添加自定义内容",
-        )}
-        defaultValue={settings.custom_body || ""}
-        OnSave={async (data) => {
-          await updateSettingsWithToast({ custom_body: data }, t);
-        }}
-      />
       <SettingCardCollapse
         title={t("settings.custom.favicon", "自定义 Favicon")}
         description={t(
