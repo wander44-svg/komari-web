@@ -1,0 +1,63 @@
+name: Rebuild Web Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: GitHub release tag to create or update
+        required: true
+        default: "1.4.3"
+      source_ref:
+        description: Branch or commit to build
+        required: true
+        default: "komari-web-1.4.3"
+
+permissions:
+  contents: write
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout custom branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "23"
+
+      - name: Build web frontend
+        run: |
+          set -euxo pipefail
+          npm install
+          npm run build
+          test -f dist/index.html
+
+      - name: Pack frontend
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euxo pipefail
+          PACKAGE_DIR="$RUNNER_TEMP/komari-web-package"
+          mkdir -p "$PACKAGE_DIR"
+          cp -r dist "$PACKAGE_DIR/"
+          cp komari-theme.json "$PACKAGE_DIR/"
+          for file in preview.png perview.png; do
+            if [ -f "$file" ]; then cp "$file" "$PACKAGE_DIR/"; fi
+          done
+          tar -czf "komari-web-${RELEASE_TAG}-dist.tar.gz" -C "$PACKAGE_DIR" .
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          SOURCE_REF: ${{ inputs.source_ref }}
+        run: |
+          set -euxo pipefail
+          if ! gh release view "$RELEASE_TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --target "$SOURCE_REF" --title "$RELEASE_TAG" --notes "Built from wander44-svg/komari-web@$SOURCE_REF." --repo "${{ github.repository }}"
+          fi
+          gh release upload "$RELEASE_TAG" "komari-web-${RELEASE_TAG}-dist.tar.gz" --clobber --repo "${{ github.repository }}"
