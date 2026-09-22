@@ -510,6 +510,22 @@ const ThemePage = () => {
                 </Flex>
               </Flex>
               <Flex justify="between" align="center" className="px-4 pb-3">
+                {theme.short !== "default" && (
+                  <Button
+                    size="1"
+                    variant="soft"
+                    color="red"
+                    className="gap-1"
+                    onClick={() => {
+                      setThemeToDelete(theme);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    {t("theme.uninstall", "卸载")}
+                  </Button>
+                  )}
+                {theme.short === "default" && <Box aria-hidden />}
                 {!theme.active && (
                   <IconButton
                     size="2"
@@ -527,21 +543,6 @@ const ThemePage = () => {
                       <Settings size={16} />
                     )}
                   </IconButton>
-                )}
-                {theme.short !== "default" && (
-                  <Button
-                    size="1"
-                    variant="soft"
-                    color="red"
-                    className="gap-1"
-                    onClick={() => {
-                      setThemeToDelete(theme);
-                      setDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 size={14} />
-                    {t("theme.uninstall", "卸载")}
-                  </Button>
                 )}
               </Flex>
             </Card>
