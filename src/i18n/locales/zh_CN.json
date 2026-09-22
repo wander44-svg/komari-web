@@ -1285,9 +1285,9 @@
       "telegram": {
         "bot_token": "Telegram Bot Token",
         "chat_id": "Chat ID",
-        "message_thread_id": "消息线程 ID",
         "endpoint": "请求端点",
-        "endpoint_help": "Telegram Bot API 的请求端点，通常为 `https://api.telegram.org/bot`"
+        "endpoint_help": "Telegram Bot API 的请求端点，通常为 `https://api.telegram.org/bot`",
+        "message_thread_id": "消息线程 ID"
       },
       "template": "消息通知模板",
       "template_description": "Komari 将按照消息通知模板发送通知",
@@ -1296,20 +1296,20 @@
       "title": "通知",
       "unavailable": "不可用"
     },
-    "settings_save_failed": "保存设置失败",
-    "settings_saved": "设置已保存",
     "panel": {
-      "title": "面板",
+      "cert_file": "面板证书公钥文件路径",
+      "invalid_port": "请输入 1-65535 之间的有效端口",
+      "key_file": "面板证书私钥文件路径",
       "listen_port": "面板监听端口",
       "listen_port_description": "修改后需要重启面板服务生效",
-      "tls_title": "HTTPS 证书",
+      "restart_required": "设置已保存，面板正在重启；请使用新的端口或 HTTPS 地址访问",
+      "title": "面板",
       "tls_description": "同时填写证书和私钥的绝对路径；保存后重启面板，HTTP 登录将失效",
-      "cert_file": "面板证书公钥文件路径",
-      "key_file": "面板证书私钥文件路径",
-      "invalid_port": "请输入 1-65535 之间的有效端口",
       "tls_pair_required": "证书公钥和私钥路径必须同时填写或同时留空",
-      "restart_required": "设置已保存，面板正在重启；请使用新的端口或 HTTPS 地址访问"
+      "tls_title": "HTTPS 证书"
     },
+    "settings_save_failed": "保存设置失败",
+    "settings_saved": "设置已保存",
     "sign_on": {
       "disable_password": "禁止密码登录",
       "title": "登录"
