@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import {
   SettingCard,
   SettingCardLabel,
-  SettingCardShortTextInput,
 } from "@/components/admin/SettingCard";
 import { updateSettingsWithToast, useSettings } from "@/lib/api";
 
@@ -15,7 +14,7 @@ const PanelSettings = () => {
   const [port, setPort] = React.useState("");
   const [certFile, setCertFile] = React.useState("");
   const [keyFile, setKeyFile] = React.useState("");
-  const [savingTLS, setSavingTLS] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
     if (loading) return;
@@ -24,32 +23,32 @@ const PanelSettings = () => {
     setKeyFile(String(settings.panel_tls_key_file ?? ""));
   }, [loading, settings]);
 
-  const savePort = async (value: string) => {
-    const next = Number(value);
+  const saveAll = async () => {
+    const next = Number(port);
     if (!Number.isInteger(next) || next < 1 || next > 65535) {
       toast.error(t("settings.panel.invalid_port"));
-      throw new Error(t("settings.panel.invalid_port"));
+      return;
     }
-    await updateSettingsWithToast({ panel_listen_port: next }, t);
-  };
-
-  const saveTLS = async () => {
     const cert = certFile.trim();
     const key = keyFile.trim();
     if ((cert === "") !== (key === "")) {
       toast.error(t("settings.panel.tls_pair_required"));
       return;
     }
-    setSavingTLS(true);
+    setSaving(true);
     try {
       await updateSettingsWithToast(
-        { panel_tls_cert_file: cert, panel_tls_key_file: key },
+        {
+          panel_listen_port: next,
+          panel_tls_cert_file: cert,
+          panel_tls_key_file: key,
+        },
         t,
       );
     } catch {
       // updateSettingsWithToast already displays the error.
     } finally {
-      setSavingTLS(false);
+      setSaving(false);
     }
   };
 
@@ -59,16 +58,21 @@ const PanelSettings = () => {
   return (
     <Flex direction="column" gap="3">
       <SettingCardLabel>{t("settings.panel.title")}</SettingCardLabel>
-      <SettingCardShortTextInput
+      <SettingCard
         title={t("settings.panel.listen_port")}
         description={t("settings.panel.listen_port_description")}
-        type="number"
-        min={1}
-        max={65535}
-        value={port}
-        onChange={(event) => setPort(event.target.value)}
-        OnSave={savePort}
-      />
+      >
+        <Flex direction="column" gap="2" className="w-full mt-1">
+          <TextField.Root
+            type="number"
+            min={1}
+            max={65535}
+            value={port}
+            onChange={(event) => setPort(event.target.value)}
+            disabled={saving}
+          />
+        </Flex>
+      </SettingCard>
       <SettingCard
         title={t("settings.panel.tls_title")}
         description={t("settings.panel.tls_description")}
@@ -82,6 +86,7 @@ const PanelSettings = () => {
               value={certFile}
               placeholder="/etc/komari/panel.crt"
               onChange={(event) => setCertFile(event.target.value)}
+              disabled={saving}
             />
           </Flex>
           <Flex direction="column" gap="1" className="w-full">
@@ -92,15 +97,16 @@ const PanelSettings = () => {
               value={keyFile}
               placeholder="/etc/komari/panel.key"
               onChange={(event) => setKeyFile(event.target.value)}
+              disabled={saving}
             />
-          </Flex>
-          <Flex justify="end">
-            <Button onClick={saveTLS} disabled={savingTLS}>
-              {savingTLS ? t("common.saving") : t("common.save")}
-            </Button>
           </Flex>
         </Flex>
       </SettingCard>
+      <Flex justify="end">
+        <Button onClick={saveAll} disabled={saving}>
+          {saving ? t("common.saving") : t("common.save")}
+        </Button>
+      </Flex>
     </Flex>
   );
 };
