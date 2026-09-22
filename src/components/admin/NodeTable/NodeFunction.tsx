@@ -26,7 +26,6 @@ async function removeClient(uuid: string) {
 
 type InstallOptions = {
   ignoreUnsafeCert: boolean;
-  ghproxy: string;
   dir: string;
   serviceName: string;
 };
@@ -36,7 +35,6 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
   const [removing, setRemoving] = React.useState(false);
   const [installOptions, setInstallOptions] = React.useState<InstallOptions>({
     ignoreUnsafeCert: false,
-    ghproxy: "",
     dir: "",
     serviceName: "",
   });
@@ -48,14 +46,6 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     // 根据安装选项生成参数
     if (installOptions.ignoreUnsafeCert) {
       args.push("--ignore-unsafe-cert");
-    }
-    const ghproxy = installOptions.ghproxy.trim();
-    if (ghproxy) {
-      const finalGhproxy = ghproxy.startsWith("http")
-        ? ghproxy
-        : `http://${ghproxy}`;
-      args.push(`--install-ghproxy`);
-      args.push(finalGhproxy);
     }
     const installDir = installOptions.dir.trim();
     if (installDir) {
@@ -69,7 +59,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     }
 
     return (
-      `wget -qO- https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-agent-1.2.60/install.sh | sudo bash -s -- ` +
+      `wget -qO- https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-optimal/install.sh | sudo bash -s -- ` +
       quoteShellArgs(args)
     );
   };
@@ -151,22 +141,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
                 </Flex>
               </div>
               <Flex direction="column" gap="2">
-                <label className="text-sm font-bold">
-                  {t("admin.nodeTable.ghproxy", "GitHub 代理")}
-                </label>
-                <TextField.Root
-                  placeholder={t(
-                    "admin.nodeTable.ghproxy_placeholder",
-                    "GitHub 代理，为空则不使用代理"
-                  )}
-                  onChange={(e) =>
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      ghproxy: e.target.value,
-                    }))
-                  }
-                ></TextField.Root>
-                <label className="text-sm font-bold">
+                <label className="text-sm font-normal">
                   {t("admin.nodeTable.install_dir", "安装目录")}
                 </label>
                 <TextField.Root
@@ -181,7 +156,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
                     }))
                   }
                 ></TextField.Root>
-                <label className="text-sm font-bold">
+                <label className="text-sm font-normal">
                   {t("admin.nodeTable.serviceName", "服务名称")}
                 </label>
                 <TextField.Root

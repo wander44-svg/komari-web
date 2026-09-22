@@ -4,12 +4,11 @@ import { useTranslation } from "react-i18next";
 import { SquareArrowOutUpRight } from "lucide-react";
 import { SegmentedControl } from "@radix-ui/themes";
 import { Apache2_LICENSE, MIT_LICENSE } from "@/utils/field";
-import { getEula } from "@/utils/eula";
 import { SettingCardCollapse } from "@/components/admin/SettingCard";
 
 export default function AboutPage() {
   const [markdown, setMarkdown] = useState("");
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [view, setView] = useState("open_source");
   useEffect(() => {
     fetch(
@@ -116,21 +115,10 @@ export default function AboutPage() {
         <SegmentedControl.Item value="open_source">
           {t("about.open_source_title")}
         </SegmentedControl.Item>
-        <SegmentedControl.Item value="eula">
-          {t("eula.title")}
-        </SegmentedControl.Item>
         <SegmentedControl.Item value="readme">Readme</SegmentedControl.Item>
       </SegmentedControl.Root>
       {(() => {
         switch (view) {
-          case "eula":
-            return (
-              <>
-                <div className="km-about-license license-text mb-4 p-4 border rounded-md bg-accent-1 flex flex-col gap-2">
-                  <pre className="text-wrap">{getEula(i18n.language)}</pre>
-                </div>
-              </>
-            );
           case "open_source":
             return (
               <>

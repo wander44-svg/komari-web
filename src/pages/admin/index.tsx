@@ -108,7 +108,6 @@ import {
 } from "@/components/admin/SettingCard";
 import { useSettings } from "@/lib/api";
 import { SelectOrInput } from "@/components/ui/select-or-input";
-import { useRPC2Call } from "@/contexts/RPC2Context";
 
 
 const NodeDetailsPage = () => {
@@ -199,13 +198,10 @@ const EmptyNodesGuide = () => {
 };
 
 type AutoDiscoveryInstallOptions = {
-  disableWebSsh: boolean;
-  disableAutoUpdate: boolean;
   ignoreUnsafeCert: boolean;
   memoryIncludeCache: boolean;
   getIpAddrFromNic: boolean;
   enableGpu: boolean;
-  ghproxy: string;
   dir: string;
   serviceName: string;
   includeNics: string;
@@ -213,34 +209,7 @@ type AutoDiscoveryInstallOptions = {
   includeMountpoints: string;
   interval: string;
   monthRotate: string;
-  installVersion: string;
 };
-
-function useIsSnapshotBackend() {
-  const { call } = useRPC2Call();
-  const [isSnapshotBackend, setIsSnapshotBackend] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    call<unknown, { version?: string }>("common:getVersion")
-      .then((info) => {
-        if (!cancelled) {
-          const version = info?.version?.trim().toLowerCase() || "";
-          setIsSnapshotBackend(version.startsWith("snapshot"));
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch backend version:", error);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [call]);
-
-  return isSnapshotBackend;
-}
 
 export const AutoDiscoverySection = ({
   settings,
@@ -258,13 +227,10 @@ export const AutoDiscoverySection = ({
   const [showOptions, setShowOptions] = React.useState(false);
   const [installOptions, setInstallOptions] =
     React.useState<AutoDiscoveryInstallOptions>({
-      disableWebSsh: false,
-      disableAutoUpdate: false,
       ignoreUnsafeCert: false,
       memoryIncludeCache: false,
       getIpAddrFromNic: false,
       enableGpu: false,
-      ghproxy: "",
       dir: "",
       serviceName: "",
       includeNics: "",
@@ -272,10 +238,8 @@ export const AutoDiscoverySection = ({
       includeMountpoints: "",
       interval: "",
       monthRotate: "",
-      installVersion: "",
     });
 
-  const [enableGhproxy, setEnableGhproxy] = React.useState(false);
   const [enableCustomDir, setEnableCustomDir] = React.useState(false);
   const [enableCustomServiceName, setEnableCustomServiceName] =
     React.useState(false);
@@ -285,20 +249,6 @@ export const AutoDiscoverySection = ({
     React.useState(false);
   const [enableInterval, setEnableInterval] = React.useState(false);
   const [enableMonthRotate, setEnableMonthRotate] = React.useState(false);
-  const [enableInstallVersion, setEnableInstallVersion] = React.useState(false);
-  const isSnapshotBackend = useIsSnapshotBackend();
-
-  React.useEffect(() => {
-    if (!showOptions || !isSnapshotBackend) {
-      return;
-    }
-
-    setEnableInstallVersion(true);
-    setInstallOptions((prev) => ({
-      ...prev,
-      installVersion: prev.installVersion.trim() || "snapshot",
-    }));
-  }, [showOptions, isSnapshotBackend]);
 
   const generateCommand = () => {
     const host = (function () {
@@ -311,12 +261,6 @@ export const AutoDiscoverySection = ({
       return `http://${settings.script_domain.replace(/\/+$/, "")}`;
     })();
     const args: string[] = ["-e", host, "--auto-discovery", adKey];
-    if (installOptions.disableWebSsh) {
-      args.push("--disable-web-ssh");
-    }
-    if (installOptions.disableAutoUpdate) {
-      args.push("--disable-auto-update");
-    }
     if (installOptions.ignoreUnsafeCert) {
       args.push("--ignore-unsafe-cert");
     }
@@ -329,14 +273,6 @@ export const AutoDiscoverySection = ({
     if (installOptions.enableGpu) {
       args.push("--gpu");
     }
-    const ghproxy = installOptions.ghproxy.trim();
-    if (enableGhproxy && ghproxy) {
-      const finalUrl = (
-        ghproxy.startsWith("http") ? ghproxy : `http://${ghproxy}`
-      ).replace(/\/+$/, "");
-      args.push(`--install-ghproxy`);
-      args.push(finalUrl);
-    }
     const installDir = installOptions.dir.trim();
     if (enableCustomDir && installDir) {
       args.push(`--install-dir`);
@@ -346,11 +282,6 @@ export const AutoDiscoverySection = ({
     if (enableCustomServiceName && serviceName) {
       args.push(`--install-service-name`);
       args.push(serviceName);
-    }
-    const installVersion = installOptions.installVersion.trim();
-    if (enableInstallVersion && installVersion) {
-      args.push(`--install-version`);
-      args.push(installVersion);
     }
     const includeNics = installOptions.includeNics.trim();
     if (enableIncludeNics && includeNics) {
@@ -384,19 +315,8 @@ export const AutoDiscoverySection = ({
       args.push(rotateVal);
     }
 
-    let scriptUrl =
-      "https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-agent-1.2.60/install.sh";
-    if (enableGhproxy && ghproxy) {
-      scriptUrl = scriptUrl.slice(8); // 去掉 https://
-      if (ghproxy.endsWith("/")) {
-        scriptUrl = `${ghproxy}${scriptUrl}`;
-      } else {
-        scriptUrl = `${ghproxy}/${scriptUrl}`;
-      }
-      if (!scriptUrl.startsWith("http")) {
-        scriptUrl = `http://${scriptUrl}`;
-      }
-    }
+    const scriptUrl =
+      "https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-optimal/install.sh";
 
     return (
       `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
@@ -495,50 +415,6 @@ export const AutoDiscoverySection = ({
           <div className="grid grid-cols-2 gap-2">
             <Flex gap="2" align="center">
               <Checkbox
-                checked={installOptions.disableWebSsh}
-                onCheckedChange={(checked) =>
-                  setInstallOptions((prev) => ({
-                    ...prev,
-                    disableWebSsh: Boolean(checked),
-                  }))
-                }
-              />
-              <label
-                className="text-sm font-normal cursor-pointer"
-                onClick={() =>
-                  setInstallOptions((prev) => ({
-                    ...prev,
-                    disableWebSsh: !prev.disableWebSsh,
-                  }))
-                }
-              >
-                {t("admin.nodeTable.disableWebSsh")}
-              </label>
-            </Flex>
-            <Flex gap="2" align="center">
-              <Checkbox
-                checked={installOptions.disableAutoUpdate}
-                onCheckedChange={(checked) =>
-                  setInstallOptions((prev) => ({
-                    ...prev,
-                    disableAutoUpdate: Boolean(checked),
-                  }))
-                }
-              />
-              <label
-                className="text-sm font-normal cursor-pointer"
-                onClick={() =>
-                  setInstallOptions((prev) => ({
-                    ...prev,
-                    disableAutoUpdate: !prev.disableAutoUpdate,
-                  }))
-                }
-              >
-                {t("admin.nodeTable.disableAutoUpdate", "禁用自动更新")}
-              </label>
-            </Flex>
-            <Flex gap="2" align="center">
-              <Checkbox
                 checked={installOptions.ignoreUnsafeCert}
                 onCheckedChange={(checked) =>
                   setInstallOptions((prev) => ({
@@ -633,83 +509,6 @@ export const AutoDiscoverySection = ({
           <Flex direction="column" gap="2">
             <Flex gap="2" align="center">
               <Checkbox
-                checked={enableInstallVersion}
-                onCheckedChange={(checked) => {
-                  setEnableInstallVersion(Boolean(checked));
-                  if (!checked) {
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      installVersion: "",
-                    }));
-                  }
-                }}
-              />
-              <label
-                className="text-sm font-bold cursor-pointer"
-                onClick={() => {
-                  const willEnable = !enableInstallVersion;
-                  setEnableInstallVersion(willEnable);
-                  if (!willEnable) {
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      installVersion: "",
-                    }));
-                  }
-                }}
-              >
-                {t("admin.nodeTable.installVersion", "指定安装版本")}
-              </label>
-            </Flex>
-            {enableInstallVersion && (
-              <TextField.Root
-                placeholder="snapshot"
-                value={installOptions.installVersion}
-                onChange={(e) =>
-                  setInstallOptions((prev) => ({
-                    ...prev,
-                    installVersion: e.target.value,
-                  }))
-                }
-              />
-            )}
-
-            <Flex gap="2" align="center">
-              <Checkbox
-                checked={enableGhproxy}
-                onCheckedChange={(checked) => {
-                  setEnableGhproxy(Boolean(checked));
-                  if (!checked) {
-                    setInstallOptions((prev) => ({ ...prev, ghproxy: "" }));
-                  }
-                }}
-              />
-              <label
-                className="text-sm font-bold cursor-pointer"
-                onClick={() => {
-                  setEnableGhproxy(!enableGhproxy);
-                  if (enableGhproxy) {
-                    setInstallOptions((prev) => ({ ...prev, ghproxy: "" }));
-                  }
-                }}
-              >
-                {t("admin.nodeTable.ghproxy", "GitHub 代理")}
-              </label>
-            </Flex>
-            {enableGhproxy && (
-              <TextField.Root
-                placeholder="https://ghfast.top/"
-                value={installOptions.ghproxy}
-                onChange={(e) =>
-                  setInstallOptions((prev) => ({
-                    ...prev,
-                    ghproxy: e.target.value,
-                  }))
-                }
-              />
-            )}
-
-            <Flex gap="2" align="center">
-              <Checkbox
                 checked={enableCustomDir}
                 onCheckedChange={(checked) => {
                   setEnableCustomDir(Boolean(checked));
@@ -719,7 +518,7 @@ export const AutoDiscoverySection = ({
                 }}
               />
               <label
-                className="text-sm font-bold cursor-pointer"
+                className="text-sm font-normal cursor-pointer"
                 onClick={() => {
                   setEnableCustomDir(!enableCustomDir);
                   if (enableCustomDir) {
@@ -757,7 +556,7 @@ export const AutoDiscoverySection = ({
                 }}
               />
               <label
-                className="text-sm font-bold cursor-pointer"
+                className="text-sm font-normal cursor-pointer"
                 onClick={() => {
                   setEnableCustomServiceName(!enableCustomServiceName);
                   if (enableCustomServiceName) {
@@ -795,7 +594,7 @@ export const AutoDiscoverySection = ({
                 }}
               />
               <label
-                className="text-sm font-bold cursor-pointer"
+                className="text-sm font-normal cursor-pointer"
                 onClick={() => {
                   setEnableIncludeNics(!enableIncludeNics);
                   if (enableIncludeNics) {
@@ -830,7 +629,7 @@ export const AutoDiscoverySection = ({
                 }}
               />
               <label
-                className="text-sm font-bold cursor-pointer"
+                className="text-sm font-normal cursor-pointer"
                 onClick={() => {
                   setEnableExcludeNics(!enableExcludeNics);
                   if (enableExcludeNics) {
@@ -868,7 +667,7 @@ export const AutoDiscoverySection = ({
                 }}
               />
               <label
-                className="text-sm font-bold cursor-pointer"
+                className="text-sm font-normal cursor-pointer"
                 onClick={() => {
                   setEnableIncludeMountpoints(!enableIncludeMountpoints);
                   if (enableIncludeMountpoints) {
@@ -912,7 +711,7 @@ export const AutoDiscoverySection = ({
                 }}
               />
               <label
-                className="text-sm font-bold cursor-pointer"
+                className="text-sm font-normal cursor-pointer"
                 onClick={() => {
                   const willEnable = !enableInterval;
                   setEnableInterval(willEnable);
@@ -962,7 +761,7 @@ export const AutoDiscoverySection = ({
                 }}
               />
               <label
-                className="text-sm font-bold cursor-pointer"
+                className="text-sm font-normal cursor-pointer"
                 onClick={() => {
                   const willEnable = !enableMonthRotate;
                   setEnableMonthRotate(willEnable);
@@ -1104,13 +903,11 @@ const SortableRow = ({
   selectedNodes,
   handleSelectNode,
   settings,
-  isSnapshotBackend,
 }: {
   node: NodeDetail;
   selectedNodes: string[];
   handleSelectNode: (uuid: string, checked: boolean) => void;
   settings: any;
-  isSnapshotBackend: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: node.uuid });
@@ -1237,11 +1034,7 @@ const SortableRow = ({
         />
       </TableCell>
       <TableCell>
-        <ActionButtons
-          node={node}
-          settings={settings}
-          isSnapshotBackend={isSnapshotBackend}
-        />
+        <ActionButtons node={node} settings={settings} />
       </TableCell>
     </TableRow>
   );
@@ -1278,7 +1071,6 @@ const NodeTable = ({
   // 添加 localNodes 状态，实现即时 UI 更新
   const [localNodes, setLocalNodes] = useState<NodeDetail[]>(nodes);
   const [isDragging, setIsDragging] = useState(false);
-  const isSnapshotBackend = useIsSnapshotBackend();
   React.useEffect(() => {
     setLocalNodes(nodes);
   }, [nodes]);
@@ -1382,7 +1174,6 @@ const NodeTable = ({
                   selectedNodes={selectedNodes}
                   handleSelectNode={handleSelectNode}
                   settings={settings}
-                  isSnapshotBackend={isSnapshotBackend}
                 />
               ))}
             </SortableContext>
@@ -1397,19 +1188,13 @@ type Platform = "linux";
 const ActionButtons = ({
   node,
   settings,
-  isSnapshotBackend,
 }: {
   node: NodeDetail;
   settings: any;
-  isSnapshotBackend: boolean;
 }) => {
   return (
     <div className="flex items-center gap-4">
-      <GenerateCommandButton
-        node={node}
-        settings={settings}
-        isSnapshotBackend={isSnapshotBackend}
-      />
+      <GenerateCommandButton node={node} settings={settings} />
       <EditButton node={node} />
       <BillingButton node={node} />
       <DeleteButton node={node} />
@@ -1465,13 +1250,10 @@ function DeleteButton({ node }: { node: NodeDetail }) {
   );
 }
 type InstallOptions = {
-  disableWebSsh: boolean;
-  disableAutoUpdate: boolean;
   ignoreUnsafeCert: boolean;
   memoryIncludeCache: boolean;
   getIpAddrFromNic: boolean;
   enableGpu: boolean;
-  ghproxy: string;
   dir: string;
   serviceName: string;
   includeNics: string;
@@ -1479,27 +1261,21 @@ type InstallOptions = {
   includeMountpoints: string;
   interval: string;
   monthRotate: string;
-  installVersion: string;
 };
 function GenerateCommandButton({
   node,
   settings,
-  isSnapshotBackend,
 }: {
   node: NodeDetail;
   settings: any;
-  isSnapshotBackend: boolean;
 }) {
   const [selectedPlatform, setSelectedPlatform] =
     React.useState<Platform>("linux");
   const [installOptions, setInstallOptions] = React.useState<InstallOptions>({
-    disableWebSsh: false,
-    disableAutoUpdate: false,
     ignoreUnsafeCert: false,
     memoryIncludeCache: false,
     getIpAddrFromNic: false,
     enableGpu: false,
-    ghproxy: "",
     dir: "",
     serviceName: "",
     includeNics: "",
@@ -1507,10 +1283,8 @@ function GenerateCommandButton({
     includeMountpoints: "",
     interval: "",
     monthRotate: "",
-    installVersion: "",
   });
 
-  const [enableGhproxy, setEnableGhproxy] = React.useState(false);
   const [enableCustomDir, setEnableCustomDir] = React.useState(false);
   const [enableCustomServiceName, setEnableCustomServiceName] =
     React.useState(false);
@@ -1520,19 +1294,6 @@ function GenerateCommandButton({
     React.useState(false);
   const [enableInterval, setEnableInterval] = React.useState(false);
   const [enableMonthRotate, setEnableMonthRotate] = React.useState(false);
-  const [enableInstallVersion, setEnableInstallVersion] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!isSnapshotBackend) {
-      return;
-    }
-
-    setEnableInstallVersion(true);
-    setInstallOptions((prev) => ({
-      ...prev,
-      installVersion: prev.installVersion.trim() || "snapshot",
-    }));
-  }, [isSnapshotBackend]);
 
   const generateCommand = () => {
     const host = function () {
@@ -1547,12 +1308,6 @@ function GenerateCommandButton({
     const token = node.token || "";
     let args = ["-e", host, "-t", token];
     // 根据安装选项生成参数
-    if (installOptions.disableWebSsh) {
-      args.push("--disable-web-ssh");
-    }
-    if (installOptions.disableAutoUpdate) {
-      args.push("--disable-auto-update");
-    }
     if (installOptions.ignoreUnsafeCert) {
       args.push("--ignore-unsafe-cert");
     }
@@ -1565,16 +1320,6 @@ function GenerateCommandButton({
     if (installOptions.enableGpu) {
       args.push("--gpu");
     }
-    const ghproxy = installOptions.ghproxy.trim();
-    if (enableGhproxy && ghproxy) {
-      const finalUrl = (
-        ghproxy.startsWith("http")
-          ? ghproxy
-          : `http://${ghproxy}`
-      ).replace(/\/+$/, "");
-      args.push(`--install-ghproxy`);
-      args.push(finalUrl);
-    }
     const installDir = installOptions.dir.trim();
     if (enableCustomDir && installDir) {
       args.push(`--install-dir`);
@@ -1584,11 +1329,6 @@ function GenerateCommandButton({
     if (enableCustomServiceName && serviceName) {
       args.push(`--install-service-name`);
       args.push(serviceName);
-    }
-    const installVersion = installOptions.installVersion.trim();
-    if (enableInstallVersion && installVersion) {
-      args.push(`--install-version`);
-      args.push(installVersion);
     }
     const includeNics = installOptions.includeNics.trim();
     if (enableIncludeNics && includeNics) {
@@ -1615,21 +1355,8 @@ function GenerateCommandButton({
       args.push(`--month-rotate`);
       args.push(rotateVal);
     }
-    let scriptUrl =
-      "https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-agent-1.2.60/install.sh";
-    if (enableGhproxy) {
-      if (enableGhproxy && ghproxy) {
-        scriptUrl = scriptUrl.slice(8); // 去掉 https://
-        if (ghproxy.endsWith("/")) {
-          scriptUrl = `${ghproxy}${scriptUrl}`;
-        } else {
-          scriptUrl = `${ghproxy}/${scriptUrl}`;
-        }
-        if (!scriptUrl.startsWith("http")) {
-          scriptUrl = `http://${scriptUrl}`;
-        }
-      }
-    }
+    const scriptUrl =
+      "https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-optimal/install.sh";
     return (
       `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
       quoteShellArgs(args)
@@ -1669,50 +1396,6 @@ function GenerateCommandButton({
               {t("admin.nodeTable.installOptions", "安装选项")}
             </label>
             <div className="grid grid-cols-2 gap-2">
-              <Flex gap="2" align="center">
-                <Checkbox
-                  checked={installOptions.disableWebSsh}
-                  onCheckedChange={(checked) => {
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      disableWebSsh: Boolean(checked),
-                    }));
-                  }}
-                />
-                <label
-                  className="text-sm font-normal"
-                  onClick={() => {
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      disableWebSsh: !prev.disableWebSsh,
-                    }));
-                  }}
-                >
-                  {t("admin.nodeTable.disableWebSsh")}
-                </label>
-              </Flex>
-              <Flex gap="2" align="center">
-                <Checkbox
-                  checked={installOptions.disableAutoUpdate}
-                  onCheckedChange={(checked) => {
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      disableAutoUpdate: Boolean(checked),
-                    }));
-                  }}
-                ></Checkbox>
-                <label
-                  className="text-sm font-normal"
-                  onClick={() => {
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      disableAutoUpdate: !prev.disableAutoUpdate,
-                    }));
-                  }}
-                >
-                  {t("admin.nodeTable.disableAutoUpdate", "禁用自动更新")}
-                </label>
-              </Flex>
               <Flex gap="2" align="center">
                 <Checkbox
                   checked={installOptions.ignoreUnsafeCert}
@@ -1808,93 +1491,6 @@ function GenerateCommandButton({
             <Flex direction="column" gap="2">
               <Flex gap="2" align="center">
                 <Checkbox
-                  checked={enableInstallVersion}
-                  onCheckedChange={(checked) => {
-                    setEnableInstallVersion(Boolean(checked));
-                    if (!checked) {
-                      setInstallOptions((prev) => ({
-                        ...prev,
-                        installVersion: "",
-                      }));
-                    }
-                  }}
-                />
-                <label
-                  className="text-sm font-bold cursor-pointer"
-                  onClick={() => {
-                    const willEnable = !enableInstallVersion;
-                    setEnableInstallVersion(willEnable);
-                    if (!willEnable) {
-                      setInstallOptions((prev) => ({
-                        ...prev,
-                        installVersion: "",
-                      }));
-                    }
-                  }}
-                >
-                  {t("admin.nodeTable.installVersion", "指定安装版本")}
-                </label>
-              </Flex>
-              {enableInstallVersion && (
-                <TextField.Root
-                  placeholder="snapshot"
-                  value={installOptions.installVersion}
-                  onChange={(e) =>
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      installVersion: e.target.value,
-                    }))
-                  }
-                />
-              )}
-
-              <Flex gap="2" align="center">
-                <Checkbox
-                  checked={enableGhproxy}
-                  onCheckedChange={(checked) => {
-                    setEnableGhproxy(Boolean(checked));
-                    if (!checked) {
-                      setInstallOptions((prev) => ({
-                        ...prev,
-                        ghproxy: "",
-                      }));
-                    }
-                  }}
-                />
-                <label
-                  className="text-sm font-bold cursor-pointer"
-                  onClick={() => {
-                    setEnableGhproxy(!enableGhproxy);
-                    if (enableGhproxy) {
-                      setInstallOptions((prev) => ({
-                        ...prev,
-                        ghproxy: "",
-                      }));
-                    }
-                  }}
-                >
-                  {t("admin.nodeTable.ghproxy", "GitHub 代理")}
-                </label>
-              </Flex>
-              {enableGhproxy && (
-                <TextField.Root
-                  // placeholder={t(
-                  //   "admin.nodeTable.ghproxy_placeholder",
-                  //   "GitHub 代理，为空则不使用代理"
-                  // )}
-                  placeholder="https://ghfast.top/"
-                  value={installOptions.ghproxy}
-                  onChange={(e) =>
-                    setInstallOptions((prev) => ({
-                      ...prev,
-                      ghproxy: e.target.value,
-                    }))
-                  }
-                />
-              )}
-
-              <Flex gap="2" align="center">
-                <Checkbox
                   checked={enableCustomDir}
                   onCheckedChange={(checked) => {
                     setEnableCustomDir(Boolean(checked));
@@ -1907,7 +1503,7 @@ function GenerateCommandButton({
                   }}
                 />
                 <label
-                  className="text-sm font-bold cursor-pointer"
+                  className="text-sm font-normal cursor-pointer"
                   onClick={() => {
                     setEnableCustomDir(!enableCustomDir);
                     if (enableCustomDir) {
@@ -1951,7 +1547,7 @@ function GenerateCommandButton({
                   }}
                 />
                 <label
-                  className="text-sm font-bold cursor-pointer"
+                  className="text-sm font-normal cursor-pointer"
                   onClick={() => {
                     setEnableCustomServiceName(!enableCustomServiceName);
                     if (enableCustomServiceName) {
@@ -1994,7 +1590,7 @@ function GenerateCommandButton({
                   }}
                 />
                 <label
-                  className="text-sm font-bold cursor-pointer"
+                  className="text-sm font-normal cursor-pointer"
                   onClick={() => {
                     setEnableIncludeNics(!enableIncludeNics);
                     if (enableIncludeNics) {
@@ -2038,7 +1634,7 @@ function GenerateCommandButton({
                   }}
                 />
                 <label
-                  className="text-sm font-bold cursor-pointer"
+                  className="text-sm font-normal cursor-pointer"
                   onClick={() => {
                     setEnableExcludeNics(!enableExcludeNics);
                     if (enableExcludeNics) {
@@ -2082,7 +1678,7 @@ function GenerateCommandButton({
                   }}
                 />
                 <label
-                  className="text-sm font-bold cursor-pointer"
+                  className="text-sm font-normal cursor-pointer"
                   onClick={() => {
                     setEnableIncludeMountpoints(!enableIncludeMountpoints);
                     if (enableIncludeMountpoints) {
@@ -2128,7 +1724,7 @@ function GenerateCommandButton({
                   }}
                 />
                 <label
-                  className="text-sm font-bold cursor-pointer"
+                  className="text-sm font-normal cursor-pointer"
                   onClick={() => {
                     const willEnable = !enableInterval;
                     setEnableInterval(willEnable);
@@ -2185,7 +1781,7 @@ function GenerateCommandButton({
                   }}
                 />
                 <label
-                  className="text-sm font-bold cursor-pointer"
+                  className="text-sm font-normal cursor-pointer"
                   onClick={() => {
                     const willEnable = !enableMonthRotate;
                     setEnableMonthRotate(willEnable);
