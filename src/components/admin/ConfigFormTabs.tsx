@@ -196,7 +196,13 @@ const ConfigFormTabs = ({
         result.push(current);
       } else if (item.type === "textbox" && !current) {
         pendingTextboxes.push(item);
-      } else if (item.key || item.type === "textbox") {
+      // Provider metadata may store the persisted field key in `name`, while
+      // newer metadata uses `key`. Accept both shapes when grouping fields.
+      } else if (
+        item.key ||
+        typeof item.name === "string" ||
+        item.type === "textbox"
+      ) {
         if (!current) {
           current = { title: undefined, items: pendingTextboxes };
           pendingTextboxes = [];
