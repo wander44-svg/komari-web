@@ -21,6 +21,7 @@
     {
       "labelKey": "system.title", "path": "/admin/settings/site", "icon": "Bolt",
       "children": [
+        { "labelKey": "settings.panel.title", "path": "/admin/settings/panel", "icon": "LayoutDashboard" },
         { "labelKey": "settings.site.title", "path": "/admin/settings/site", "icon": "Home" },
         { "labelKey": "settings.general.title", "path": "/admin/settings/general", "icon": "Ellipsis" },
         { "labelKey": "settings.metrics.title", "path": "/admin/settings/metrics", "icon": "Database" },

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Text } from "@radix-ui/themes";
+import { Button, Flex, Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import Loading from "@/components/loading";
@@ -8,6 +8,7 @@ import ConfigFormTabs, {
 } from "@/components/admin/ConfigFormTabs";
 import {
   SettingCardButton,
+  SettingCardCollapse,
   SettingCardLabel,
   SettingCardLongTextInput,
   SettingCardSelect,
@@ -201,32 +202,36 @@ const NotificationSettings = () => {
         </Text>
       ) : null}
       {currentRegistered && items.length > 0 ? (
-        <ConfigFormTabs
-          items={items}
-          values={values}
-          onValueChange={(key, value) =>
-            setValues((current) => ({ ...current, [key]: value }))
-          }
-          resolveText={(value) => resolveI18nText(value, currentLanguage)}
-          className="km-notification-channel-config"
-          fillHeight={false}
-          header={
-            <Text weight="bold">
-              {t("settings.notification.provider_fields")}
-            </Text>
-          }
-          footer={
-            <SettingCardButton
-              title={t("settings.notification.provider_fields")}
-              description={t(
-                "settings.notification.provider_fields_description",
-              )}
-              onClick={saveConfiguration}
-            >
-              {saving ? t("common.saving") : t("common.save")}
-            </SettingCardButton>
-          }
-        />
+        <SettingCardCollapse
+          title={t("settings.notification.provider_fields")}
+          description={t(
+            "settings.notification.provider_fields_description",
+          )}
+          defaultOpen
+        >
+          <ConfigFormTabs
+            items={items}
+            values={values}
+            onValueChange={(key, value) =>
+              setValues((current) => ({ ...current, [key]: value }))
+            }
+            resolveText={(value) => {
+              const raw = resolveI18nText(value, currentLanguage);
+              if (!raw) return raw;
+              return t(`settings.notification.telegram.${raw}`, raw);
+            }}
+            className="km-notification-channel-config"
+            fillHeight={false}
+            borderlessFields
+            footer={
+              <Flex justify="end" className="mt-3">
+                <Button onClick={saveConfiguration} disabled={saving}>
+                  {saving ? t("common.saving") : t("common.save")}
+                </Button>
+              </Flex>
+            }
+          />
+        </SettingCardCollapse>
       ) : null}
       <SettingCardButton
         title={t("settings.notification.test_title")}

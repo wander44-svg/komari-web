@@ -24,7 +24,8 @@ export interface SettingsResponse {
 }
 
 type SettingsRestart = {
-  guidePath: string;
+  guidePath?: string;
+  panelRestart?: boolean;
 };
 
 const migrationGuideStatusPath = "/api/admin/database-migration/auth";
@@ -41,15 +42,17 @@ function settingsRestartFrom(responseData: unknown): SettingsRestart | undefined
 
   const { restart_required: restartRequired, guide_path: guidePath } =
     responseData.data;
-  if (
-    restartRequired !== true ||
-    typeof guidePath !== "string" ||
-    !guidePath.startsWith("/") ||
-    guidePath.startsWith("//")
-  ) {
+  if (restartRequired !== true) {
     return undefined;
   }
-  return { guidePath };
+  if (
+    typeof guidePath === "string" &&
+    guidePath.startsWith("/") &&
+    !guidePath.startsWith("//")
+  ) {
+    return { guidePath };
+  }
+  return { panelRestart: true };
 }
 
 function waitForMigrationGuide(guidePath: string) {
@@ -150,7 +153,9 @@ export async function updateSettings(
 
   const restart = settingsRestartFrom(responseData);
   if (restart) {
-    waitForMigrationGuide(restart.guidePath);
+    if (restart.guidePath) {
+      waitForMigrationGuide(restart.guidePath);
+    }
   }
   return restart;
 }
@@ -160,7 +165,9 @@ export async function updateSettingsWithToast(
 ): Promise<void> {
   try {
     const restart = await updateSettings(settings);
-    if (!restart) {
+    if (restart?.panelRestart) {
+      toast.info(t("settings.panel.restart_required"));
+    } else if (!restart) {
       toast.success(t("settings.settings_saved"));
     }
   } catch (error) {

@@ -147,6 +147,8 @@ interface ConfigFormTabsProps {
   formClassName?: string;
   /** Keep the form in a bounded container with its own scroll area. */
   fillHeight?: boolean;
+  /** Render field cards without their own borders when wrapped by a parent card. */
+  borderlessFields?: boolean;
 }
 
 const SPY_LINE_OFFSET = 16;
@@ -169,6 +171,7 @@ const ConfigFormTabs = ({
   className,
   formClassName,
   fillHeight = true,
+  borderlessFields = false,
 }: ConfigFormTabsProps) => {
   const { t } = useTranslation();
   const { nodeList } = useNodeList();
@@ -345,7 +348,11 @@ const ConfigFormTabs = ({
       );
     }
 
-    const key = item.key!;
+    // Provider metadata historically used `name` for the persisted field key,
+    // while theme metadata uses `key`. Accept both shapes so every provider
+    // field renders and edits its own value instead of sharing an undefined key.
+    const key = item.key ?? (typeof item.name === "string" ? item.name : "");
+    if (!key) return null;
     const value = values[key];
     switch (item.type) {
       case "nodes":
@@ -386,6 +393,7 @@ const ConfigFormTabs = ({
             <SettingCardSwitch
               title={title}
               description={description}
+              bordless={borderlessFields}
               defaultChecked={!!value}
               onChange={(checked) => onValueChange(key, checked)}
             />
@@ -402,6 +410,7 @@ const ConfigFormTabs = ({
             <SettingCardSelect
               title={title}
               description={description}
+              bordless={borderlessFields}
               value={value}
               options={options}
               OnSave={(v) => onValueChange(key, v)}
@@ -416,6 +425,7 @@ const ConfigFormTabs = ({
             <SettingCardShortTextInput
               title={title}
               description={description}
+              bordless={borderlessFields}
               type="number"
               showSaveButton={false}
               value={value !== undefined ? String(value) : ""}
@@ -434,6 +444,7 @@ const ConfigFormTabs = ({
             <SettingCardLongTextInput
               title={title}
               description={description}
+              bordless={borderlessFields}
               defaultValue={value !== undefined ? String(value) : ""}
               showSaveButton={false}
               onChange={(e) => onValueChange(key, e.target.value)}
@@ -447,6 +458,7 @@ const ConfigFormTabs = ({
             <SettingCardShortTextInput
               title={title}
               description={description}
+              bordless={borderlessFields}
               value={value !== undefined ? String(value) : ""}
               required={item.required}
               showSaveButton={false}

@@ -120,6 +120,12 @@ export const routes: RouteObject[] = [
             ),
           },
           {
+            path: "panel",
+            element: React.createElement(
+              lazy(() => import("./pages/admin/settings/panel")),
+            ),
+          },
+          {
             path: "theme",
             element: React.createElement(Navigate, {
               to: "/admin/themes",

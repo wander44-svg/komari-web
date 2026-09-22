@@ -1281,6 +1281,7 @@
       "telegram": {
         "bot_token": "Telegram Bot Token",
         "chat_id": "Chat ID",
+        "message_thread_id": "Message Thread ID",
         "endpoint": "Request Endpoint",
         "endpoint_help": "Request endpoint for the Telegram Bot API, usually `https://api.telegram.org/bot`"
       },
@@ -1292,6 +1293,18 @@
     },
     "settings_save_failed": "Failed to Save Settings",
     "settings_saved": "Settings Saved",
+    "panel": {
+      "title": "Panel",
+      "listen_port": "Panel listen port",
+      "listen_port_description": "Restart the panel service after changing this value",
+      "tls_title": "HTTPS certificate",
+      "tls_description": "Provide absolute paths to both the certificate and private key. HTTP login will be disabled after restart.",
+      "cert_file": "Panel certificate public file",
+      "key_file": "Panel certificate private key",
+      "invalid_port": "Enter a valid port between 1 and 65535",
+      "tls_pair_required": "Certificate and private key paths must be provided together or both left empty",
+      "restart_required": "Settings saved. The panel is restarting; use the new port or HTTPS address to reconnect"
+    },
     "sign_on": {
       "disable_password": "Disable password login",
       "title": "Sign-On"
