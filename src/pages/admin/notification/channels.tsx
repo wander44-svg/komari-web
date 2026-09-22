@@ -79,8 +79,29 @@ const NotificationSettings = () => {
       { id: currentChannel },
     )
       .then((result) => {
-        setConfiguration(result?.configuration);
-        setValues(result?.data || {});
+        const nextConfiguration = result?.configuration;
+        const savedValues = result?.data || {};
+        const defaults = Array.isArray(nextConfiguration?.data)
+          ? (nextConfiguration.data as ConfigFormItem[]).reduce<
+            Record<string, unknown>
+            >((current, item) => {
+              const key =
+                item.key ?? (typeof item.name === "string" ? item.name : "");
+              if (
+                key &&
+                item.default !== undefined &&
+                item.default !== null &&
+                (savedValues[key] === undefined ||
+                  savedValues[key] === null ||
+                  savedValues[key] === "")
+              ) {
+                current[key] = item.default;
+              }
+              return current;
+            }, {})
+          : {};
+        setConfiguration(nextConfiguration);
+        setValues({ ...defaults, ...savedValues });
       })
       .catch(() => {
         setConfiguration(undefined);
