@@ -100,8 +100,17 @@ const NotificationSettings = () => {
               return current;
             }, {})
           : {};
+        const nextValues = { ...defaults, ...savedValues };
+        if (
+          currentChannel === "telegram" &&
+          (!nextValues.endpoint ||
+            (typeof nextValues.endpoint === "string" &&
+              nextValues.endpoint.trim() === ""))
+        ) {
+          nextValues.endpoint = "https://api.telegram.org/bot";
+        }
         setConfiguration(nextConfiguration);
-        setValues({ ...defaults, ...savedValues });
+        setValues(nextValues);
       })
       .catch(() => {
         setConfiguration(undefined);
