@@ -92,27 +92,13 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          // HTML is rendered dynamically with theme, plugin, and site settings.
-          // Cache only immutable assets so every navigation reaches the server.
-          globPatterns: ["**/*.{js,css,ico,png,svg}"],
+          // HTML, API, theme and plugin responses are dynamic. Keep navigation
+          // and runtime requests on the network; precache only build assets.
+          globPatterns: ["**/*.{js,css,ico,webp}"],
           maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
           navigateFallback: null,
-          runtimeCaching: [
-            {
-              urlPattern: /^https:\/\/api\./i,
-              handler: "NetworkFirst",
-              options: {
-                cacheName: "api-cache",
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-          ],
+          runtimeCaching: [],
+          cleanupOutdatedCaches: true,
         },
       }),
       visualizer({
