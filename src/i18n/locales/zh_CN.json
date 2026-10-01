@@ -971,6 +971,7 @@
     "delete_failed": "删除会话失败",
     "delete_one_desc": "确定要删除此会话吗？",
     "deleted_successfully": "会话已删除",
+    "device": "登录设备",
     "expires_at": "过期时间",
     "last_login": "上次登录",
     "last_user_agent": "最后活动UA",
@@ -978,8 +979,7 @@
     "latest_online": "最近在线",
     "login_method": "登入方式",
     "session_id": "会话 ID",
-    "title": "会话管理",
-    "device": "登录设备"
+    "title": "会话管理"
   },
   "settings": {
     "api": {
