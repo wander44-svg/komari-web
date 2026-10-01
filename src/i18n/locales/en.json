@@ -1334,7 +1334,7 @@
       "target": "Target database",
       "target_description": "Use local SQLite or send metric data to remote MariaDB / MySQL / PostgreSQL.",
       "title": "Monitoring database upgrade"
-    },
+    }
   },
   "status_settings": "Status Settings",
   "system": {

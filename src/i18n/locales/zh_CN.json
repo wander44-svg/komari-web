@@ -1339,7 +1339,7 @@
       "target": "目标数据库",
       "target_description": "选择本地 SQLite，或将指标数据写入远程 MariaDB / MySQL / PostgreSQL。",
       "title": "监控数据库升级"
-    },
+    }
   },
   "status_settings": "状态显示设置",
   "system": {
