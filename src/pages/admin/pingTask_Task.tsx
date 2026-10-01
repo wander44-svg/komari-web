@@ -197,6 +197,17 @@ const Row = ({
     clients: task.clients || [],
     default_on: task.default_on || false,
     interval: task.interval || 60,
+    loss_notify_enabled: task.loss_notify_enabled || false,
+    loss_threshold: task.loss_threshold || 20,
+    loss_window_minutes: task.loss_window_minutes || 5,
+    // Existing tasks have no loss-client list yet; start with their monitored
+    // servers so enabling the feature is useful without an extra selection.
+    loss_clients:
+      task.loss_clients && task.loss_clients.length > 0
+        ? task.loss_clients
+        : task.clients || [],
+    loss_alert_template: task.loss_alert_template || "",
+    loss_recovery_template: task.loss_recovery_template || "",
   });
 
   const submitEdit = (newForm: typeof form) => {
@@ -218,6 +229,12 @@ const Row = ({
             default_on: newForm.default_on,
             clients: newForm.clients,
             interval: newForm.interval,
+            loss_notify_enabled: newForm.loss_notify_enabled,
+            loss_threshold: newForm.loss_threshold,
+            loss_window_minutes: newForm.loss_window_minutes,
+            loss_clients: newForm.loss_clients,
+            loss_alert_template: newForm.loss_alert_template,
+            loss_recovery_template: newForm.loss_recovery_template,
           },
         ],
       }),
@@ -417,6 +434,77 @@ const Row = ({
                 }
                 required
               />
+              <Flex direction="column" gap="2" className="mt-2 rounded-md border p-3">
+                <label className="flex min-h-10 items-center gap-2 text-sm font-normal">
+                  <Checkbox
+                    checked={form.loss_notify_enabled}
+                    onCheckedChange={(checked) =>
+                      setForm((f) => ({ ...f, loss_notify_enabled: !!checked }))
+                    }
+                  />
+                  <span>{t("ping.loss_notify_enabled")}</span>
+                </label>
+                {form.loss_notify_enabled && (
+                  <>
+                    <label>{t("ping.loss_threshold")}</label>
+                    <TextField.Root
+                      type="number"
+                      min={1}
+                      max={100}
+                      step={0.1}
+                      value={form.loss_threshold}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, loss_threshold: Number(e.target.value) }))
+                      }
+                      required
+                    />
+                    <label>{t("ping.loss_window")}</label>
+                    <TextField.Root
+                      type="number"
+                      min={1}
+                      max={60}
+                      value={form.loss_window_minutes}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, loss_window_minutes: Number(e.target.value) }))
+                      }
+                      required
+                    />
+                    <label className="text-xs text-gray-500">
+                      {t("ping.loss_window_help")}
+                    </label>
+                    <label>{t("ping.loss_servers")}</label>
+                    <NodeSelectorDialog
+                      value={form.loss_clients}
+                      onChange={(v) => setForm((f) => ({ ...f, loss_clients: v }))}
+                      title={t("ping.loss_servers")}
+                    />
+                    <label className="text-sm text-gray-500">
+                      {t("common.selected", { count: form.loss_clients.length })}
+                    </label>
+                    <label>{t("ping.loss_alert_template")}</label>
+                    <textarea
+                      className="min-h-24 rounded-md border bg-transparent p-2 text-sm"
+                      value={form.loss_alert_template}
+                      placeholder={t("ping.loss_alert_placeholder")}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, loss_alert_template: e.target.value }))
+                      }
+                    />
+                    <label>{t("ping.loss_recovery_template")}</label>
+                    <textarea
+                      className="min-h-24 rounded-md border bg-transparent p-2 text-sm"
+                      value={form.loss_recovery_template}
+                      placeholder={t("ping.loss_recovery_placeholder")}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, loss_recovery_template: e.target.value }))
+                      }
+                    />
+                    <label className="text-xs text-gray-500">
+                      {t("ping.loss_template_help")}
+                    </label>
+                  </>
+                )}
+              </Flex>
               <Flex gap="2" justify="end" className="mt-4">
                 <Dialog.Close>
                   <Button

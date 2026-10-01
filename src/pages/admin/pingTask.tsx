@@ -81,6 +81,12 @@ const AddButton: React.FC = () => {
     "icmp" | "tcp" | "http"
   >("icmp");
   const [saving, setSaving] = React.useState(false);
+  const [lossNotifyEnabled, setLossNotifyEnabled] = React.useState(false);
+  const [lossThreshold, setLossThreshold] = React.useState(20);
+  const [lossWindowMinutes, setLossWindowMinutes] = React.useState(5);
+  const [lossClients, setLossClients] = React.useState<string[]>([]);
+  const [lossAlertTemplate, setLossAlertTemplate] = React.useState("");
+  const [lossRecoveryTemplate, setLossRecoveryTemplate] = React.useState("");
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!defaultOn && selected.length === 0) {
@@ -94,6 +100,12 @@ const AddButton: React.FC = () => {
       default_on: defaultOn,
       clients: selected,
       interval: parseInt(e.currentTarget.interval.value, 10),
+      loss_notify_enabled: lossNotifyEnabled,
+      loss_threshold: lossThreshold,
+      loss_window_minutes: lossWindowMinutes,
+      loss_clients: lossClients.length > 0 ? lossClients : selected,
+      loss_alert_template: lossAlertTemplate,
+      loss_recovery_template: lossRecoveryTemplate,
     };
     setSaving(true);
     fetch("/api/admin/ping/add", {
@@ -109,6 +121,12 @@ const AddButton: React.FC = () => {
           setSelected([]);
           setDefaultOn(false);
           setSelectedType("icmp");
+          setLossNotifyEnabled(false);
+          setLossThreshold(20);
+          setLossWindowMinutes(5);
+          setLossClients([]);
+          setLossAlertTemplate("");
+          setLossRecoveryTemplate("");
           toast.success(t("common.success"));
         } else {
           response
@@ -190,6 +208,65 @@ const AddButton: React.FC = () => {
               type="number"
               placeholder="60"
             />
+            <Flex direction="column" gap="2" className="mt-2 rounded-md border p-3">
+              <label className="flex min-h-10 items-center gap-2 text-sm font-normal">
+                <Checkbox
+                  checked={lossNotifyEnabled}
+                  onCheckedChange={(checked) => setLossNotifyEnabled(!!checked)}
+                />
+                <span>{t("ping.loss_notify_enabled")}</span>
+              </label>
+              {lossNotifyEnabled && (
+                <>
+                  <label>{t("ping.loss_threshold")}</label>
+                  <TextField.Root
+                    type="number"
+                    min={1}
+                    max={100}
+                    step={0.1}
+                    value={lossThreshold}
+                    onChange={(e) => setLossThreshold(Number(e.target.value))}
+                  />
+                  <label>{t("ping.loss_window")}</label>
+                  <TextField.Root
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={lossWindowMinutes}
+                    onChange={(e) => setLossWindowMinutes(Number(e.target.value))}
+                  />
+                  <label className="text-xs text-gray-500">
+                    {t("ping.loss_window_help")}
+                  </label>
+                  <label>{t("ping.loss_servers")}</label>
+                  <NodeSelectorDialog
+                    value={lossClients.length > 0 ? lossClients : selected}
+                    onChange={setLossClients}
+                    title={t("ping.loss_servers")}
+                  />
+                  <label className="text-sm text-gray-500">
+                    {t("common.selected", { count: (lossClients.length > 0 ? lossClients : selected).length })}
+                  </label>
+                  <label>{t("ping.loss_alert_template")}</label>
+                  <textarea
+                    className="min-h-24 rounded-md border bg-transparent p-2 text-sm"
+                    value={lossAlertTemplate}
+                    placeholder={t("ping.loss_alert_placeholder")}
+                    onChange={(e) => setLossAlertTemplate(e.target.value)}
+                  />
+                  <label>{t("ping.loss_recovery_template")}</label>
+                  <textarea
+                    className="min-h-24 rounded-md border bg-transparent p-2 text-sm"
+                    value={lossRecoveryTemplate}
+                    placeholder={t("ping.loss_recovery_placeholder")}
+                    onChange={(e) => setLossRecoveryTemplate(e.target.value)}
+                  />
+                  <label className="text-xs text-gray-500">
+                    {t("ping.loss_template_help")}
+                  </label>
+                </>
+              )}
+            </Flex>
             <div className="flex justify-end gap-2">
               <Dialog.Close>
                 <Button variant="soft">{t("common.close")}</Button>

@@ -7,7 +7,7 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { AnimatePresence, motion } from "framer-motion"; // 引入 Framer Motion
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation /*useNavigate*/ } from "react-router-dom";
 import ColorSwitch from "../ColorSwitch";
@@ -47,11 +47,17 @@ interface AdminPanelBarProps {
 
 const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
   const { call } = useRPC2Call();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Initialize from the actual viewport.  On a PWA restore the responsive
+  // hook can settle one render later; starting from `false` made the drawer
+  // visibly open and close on every navigation back to the admin page.
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 768 : false,
+  );
   const [openSubMenus, setOpenSubMenus] = useState<{ [key: string]: boolean }>({
     // 默认所有子菜单关闭
   });
   const isMobile = useIsMobile();
+  const previousIsMobile = useRef(isMobile);
   const ishttps = window.location.protocol === "https:";
   const [t, i18n] = useTranslation();
   const location = useLocation();
@@ -154,12 +160,13 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     fetchVersionInfo();
   }, []);
 
-  // Handle responsive behavior
+  // Only change the drawer when crossing the mobile breakpoint.  Resizes and
+  // PWA restores must not overwrite the user's manually collapsed state.
   useEffect(() => {
-    const handleResize = () => setSidebarOpen(!isMobile);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    if (previousIsMobile.current !== isMobile) {
+      setSidebarOpen(!isMobile);
+      previousIsMobile.current = isMobile;
+    }
   }, [isMobile]);
 
   // 主题配置和插件注入页面分别作为“主题”“插件”主菜单的二级菜单。
