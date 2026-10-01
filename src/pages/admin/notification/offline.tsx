@@ -11,6 +11,7 @@ import {
   NodeDetailsProvider,
   useNodeDetails,
 } from "@/contexts/NodeDetailsContext";
+import { SettingCardLabel } from "@/components/admin/SettingCard";
 import {
   OfflineNotificationProvider,
   useOfflineNotification,
@@ -66,6 +67,11 @@ const NotificationEditForm = ({
   const [enabled, setEnabled] = React.useState(initialValues.enable);
   // const [cooldown, setCooldown] = React.useState(initialValues.cooldown);
   const [grace, setGrace] = React.useState(initialValues.grace_period);
+
+  React.useEffect(() => {
+    setEnabled(initialValues.enable);
+    setGrace(initialValues.grace_period);
+  }, [initialValues.enable, initialValues.grace_period]);
   return (
     <form
       onSubmit={(e) => {
@@ -194,9 +200,9 @@ const InnerLayout = ({ embedded = false }: { embedded?: boolean }) => {
       }`}
     >
       <Flex justify="between" align="center" wrap="wrap">
-        <label className="text-2xl font-semibold">
+        <SettingCardLabel>
           {t("notification.offline.full_title", "离线通知设置")}
-        </label>
+        </SettingCardLabel>
         <TextField.Root
           type="text"
           className="max-w-64"

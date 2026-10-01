@@ -13,7 +13,6 @@ const NodeDisplay = React.lazy(() => import("../components/NodeDisplay"));
 import { formatBytes } from "@/utils/unitHelper";
 import { useLiveData } from "../contexts/LiveDataContext";
 import { useNodeList } from "@/contexts/NodeListContext";
-import Loading from "@/components/loading";
 import { Settings } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { LiveData } from "@/types/LiveData";
@@ -49,7 +48,7 @@ type StatusCardKey = keyof typeof STATUS_CARD_VISIBILITY_DEFAULTS;
 const Index = () => {
   const [t] = useTranslation();
   const { live_data } = useLiveData();
-  const { nodeList, isLoading, error, refresh } = useNodeList();
+  const { nodeList, error, refresh } = useNodeList();
   const liveData = live_data?.data ?? EMPTY_LIVE_DATA;
   const onlineSet = useMemo(
     () => new Set(liveData.online),
@@ -166,9 +165,6 @@ const Index = () => {
     };
   }, [refresh]);
 
-  if (isLoading) {
-    return <Loading />;
-  }
   if (error) {
     return <div>Error: {error}</div>;
   }
