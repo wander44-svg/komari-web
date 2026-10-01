@@ -978,7 +978,8 @@
     "latest_online": "最近在线",
     "login_method": "登入方式",
     "session_id": "会话 ID",
-    "title": "会话管理"
+    "title": "会话管理",
+    "device": "登录设备"
   },
   "settings": {
     "api": {

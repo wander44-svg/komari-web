@@ -973,7 +973,8 @@
     "latest_online": "Latest Online",
     "login_method": "Login Method",
     "session_id": "Session ID",
-    "title": "Sessions"
+    "title": "Sessions",
+    "device": "Login Device"
   },
   "settings": {
     "api": {

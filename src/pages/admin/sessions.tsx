@@ -135,7 +135,7 @@ export default function Sessions() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("sessions.session_id")}</TableHead>
+              <TableHead>{t("sessions.device", "登录设备")}</TableHead>
               <TableHead>UA</TableHead>
               <TableHead>IP</TableHead>
               <TableHead>Latest IP</TableHead>
@@ -148,12 +148,12 @@ export default function Sessions() {
             {sessions.data.map((s) => {
               const isCurrent = s.session === sessions.current;
               return (
-                <TableRow key={s.uuid} className="km-session-item">
+                <TableRow key={`${s.session}-${s.created_at}`} className="km-session-item">
                   <TableCell>
                     <Dialog.Root>
                       <Dialog.Trigger>
                         <label className="hover:underline cursor-pointer">
-                          {s.session.slice(0, 8)}...
+                          {s.login_method || UserAgentHelper.format(s.user_agent, t)}
                           {isCurrent && (
                             <span className="ml-2 text-sm text-blue-600">
                               {t("sessions.current")}
@@ -166,10 +166,6 @@ export default function Sessions() {
                           {t("sessions.active_sessions")}
                         </Dialog.Title>
                         <Flex direction="column" gap="1">
-                          <label className="text-base font-bold">
-                            {t("sessions.session_id")}
-                          </label>
-                          <label className="text-sm">{s.session}</label>
                           <label className="text-base font-bold">
                             IP / {t("sessions.latest_ip")}
                           </label>
