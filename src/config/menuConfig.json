@@ -8,6 +8,8 @@
       "children": [
         { "labelKey": "notification.channels.title", "path": "/admin/notification/channels", "icon": "MessageCircleMore" },
         { "labelKey": "notification.general.title", "path": "/admin/notification/general", "icon": "Ellipsis" },
+        { "labelKey": "notification.load.title", "path": "/admin/notification/load", "icon": "Activity" },
+        { "labelKey": "notification.traffic_report.title", "path": "/admin/notification/traffic-report", "icon": "TrendingUp" },
         { "labelKey": "sessions.title", "path": "/admin/sessions", "icon": "Users" }
       ]
     },

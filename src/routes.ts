@@ -190,6 +190,18 @@ export const routes: RouteObject[] = [
               lazy(() => import("./pages/admin/notification/general"))
             ),
           },
+          {
+            path: "load",
+            element: React.createElement(
+              lazy(() => import("./pages/admin/notification/load"))
+            ),
+          },
+          {
+            path: "traffic-report",
+            element: React.createElement(
+              lazy(() => import("./pages/admin/notification/traffic_report"))
+            ),
+          },
         ],
       },
       {

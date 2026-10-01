@@ -30,18 +30,7 @@
     "title": "Account"
   },
   "account_settings": {
-    "bind_sso": "Bind External Account",
-    "confirm_unbind": "Confirm Unbind",
     "looking_for_backup": "Looking for backup? It has now been moved to Settings - Site - Backup.",
-    "sso_account": "External Account",
-    "sso_account_bound": "{{name}} account",
-    "sso_auth_failed": "SSO authentication failed",
-    "sso_bound": "Bound External Account",
-    "sso_not_bound": "Unbound",
-    "unbind_sso": "Unbind External Account",
-    "unbind_sso_failed": "Unbinding failed",
-    "unbind_sso_success": "Successfully unbound",
-    "unbind_sso_warning": "Are you sure you want to unbind the {{provider}} account?",
     "upload_success": "Upload success"
   },
   "admin": {
@@ -251,14 +240,6 @@
     "tomato": "Tomato",
     "violet": "Violet",
     "yellow": "Yellow"
-  },
-  "command_clipboard": {
-    "title": "Command Clipboard",
-    "add": "Add Command",
-    "edit": "Edit Command",
-    "delete": "Delete Command",
-    "error_loading": "Error loading commands: {{message}}",
-    "error_generic": "An error occurred"
   },
   "file_manager": {
     "copy": "Copy",
@@ -730,12 +711,39 @@
   "nodes": {
     "empty": "No server data available"
   },
+  "loadAlert": {
+    "title": "Load Alert",
+    "metric": "Metric",
+    "ratio": "Ratio",
+    "threshold_placeholder": "'80' for 80%"
+  },
   "notification": {
     "channels": {
       "title": "Notification Channels"
     },
     "general": {
       "title": "General Events"
+    },
+    "load": {
+      "title": "Load Alerts",
+      "metric": "Metric",
+      "ratio": "Ratio"
+    },
+    "traffic_report": {
+      "title": "Scheduled Traffic Reports",
+      "full_title": "Scheduled Traffic Report",
+      "report_type": "Report Type",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "batch_edit": "Batch Edit",
+      "separator": "Separator",
+      "errors": {
+        "fetch_failed": "Failed to load traffic reports",
+        "select_cadence": "Select at least one reporting cadence",
+        "save_failed": "Failed to save traffic report",
+        "update_failed": "Failed to update traffic report"
+      }
     },
     "offline": {
       "cooldown": "Cooldown Period",
@@ -776,77 +784,6 @@
     "task": "Task",
     "task_view": "Task View",
     "title": "Latency"
-  },
-  "plugin": {
-    "config": "Configuration",
-    "config_no_configurable_plugins": "No plugins with configuration items",
-    "config_no_items": "This plugin has no configuration items",
-    "config_save_failed": "Failed to save configuration",
-    "config_saved": "Configuration saved",
-    "config_saved_and_reloaded": "Configuration saved and plugin reloaded",
-    "config_saved_reload_failed": "Configuration saved, but plugin reload failed",
-    "config_select_hint": "Select a plugin to configure",
-    "delete": "Delete plugin",
-    "delete_confirm": "Delete this plugin?",
-    "delete_confirm_desc": "The plugin directory and its configuration will be removed.",
-    "deleted": "Plugin deleted",
-    "deleting": "Deleting...",
-    "disable": "Disable plugin",
-    "disable_success": "Plugin disabled",
-    "drag_drop": "Drag and drop files here",
-    "enable": "Enable plugin",
-    "enable_success": "Plugin enabled",
-    "installed": "Installed",
-    "invalid_file_type": "Invalid file type, only .zip files are supported",
-    "last_error": "Last error",
-    "loading": "Loading...",
-    "logs_load_failed": "Failed to load logs",
-    "manage": "Manage plugins",
-    "market": "Plugin Market",
-    "market_install": "Install",
-    "market_install_success": "Plugin installed",
-    "market_installing": "Installing...",
-    "market_modify": "Modify",
-    "market_no_plugins": "No plugins in the market",
-    "market_not_installable": "Not installable",
-    "market_plugins": "plugins",
-    "market_refresh_success": "Plugin sources refreshed",
-    "market_reinstall": "Reinstall",
-    "market_search": "Search plugins...",
-    "market_update_required": "Komari update required",
-    "market_uninstall_success": "Plugin uninstalled",
-    "market_warning": "Third-party plugins in the market are not vetted by the project and may contain harmful code. Please review carefully before installing.",
-    "no_logs": "No logs",
-    "no_plugins": "No plugins installed yet",
-    "or_click_to_browse": "Or click to browse files",
-    "page_missing_params": "Missing plugin page parameters",
-    "permission": {
-      "allowAllFileAccess": "Access files outside the plugin directory",
-      "allowExec": "Execute child processes",
-      "allowHooks": "Modify HTTP requests/responses",
-      "allowHTMLInject": "Embed CSS/JS into every HTML page",
-      "allowListen": "Listen on local ports",
-      "allowRoutes": "Register HTTP routes",
-      "allowSystemRPC": "Call system RPC"
-    },
-    "permission_approve": "Approve & Enable",
-    "permission_default_note": "Default granted: read plugin configuration, register plugin RPC, read/write files inside the plugin directory",
-    "permission_description": "This plugin requests the following permissions:",
-    "permission_none": "This plugin requests no special permissions",
-    "permission_title": "Permission required",
-    "running": "Running",
-    "saving": "Saving...",
-    "saving_and_reloading": "Saving and reloading...",
-    "save_and_reload": "Save and reload",
-    "stopped": "Stopped",
-    "title": "Plugins",
-    "upload": "Upload Plugin",
-    "upload_413_content_too_large": "File upload failed (413). Please check and increase the file size limit in your reverse proxy server (such as Nginx/CDN) configuration (client_max_body_size) to ensure that this value is greater than your target file size.",
-    "upload_description": "Upload a .zip plugin package",
-    "upload_failed": "Plugin upload failed",
-    "uploaded": "Plugin uploaded",
-    "uploading": "Uploading...",
-    "zip_files_only": "Only .zip files are supported"
   },
   "pprof": {
     "capture_duration": "CPU and trace capture duration",
@@ -1338,7 +1275,7 @@
       "send_ip_addr_to_guest": "Show partial IP address to guests",
       "send_ip_addr_to_guest_description": "Under non-logged-in conditions, partial IP address information can be viewed through common:getNodes, in the form of 9.*.*.* / fe80:*:*:*:*:*:*:*. Used for displaying IP in some themes.",
       "ssrf_protection_enabled": "Enable SSRF protection",
-      "ssrf_protection_enabled_description": "When enabled, theme and plugin market downloads, remote theme imports, and theme updates block private, local, and other non-public network addresses, including redirect targets. When disabled, this address check is not performed.",
+      "ssrf_protection_enabled_description": "When enabled, theme market downloads, remote theme imports, and theme updates block private, local, and other non-public network addresses, including redirect targets. When disabled, this address check is not performed.",
       "temporary_share": "Temporary Share",
       "temporary_share_current_link": "Current Temporary Access Link",
       "temporary_share_description": "After enabling the private site, you can access the site through a temporary share link.",
@@ -1348,35 +1285,6 @@
       "ws_allowed_origins": "WebSocket allowed origins",
       "ws_origin_check_enabled": "WebSocket origin check",
       "ws_origin_check_enabled_description": "When enabled, WebSocket requests are only allowed from the same origin or origins in the allowed list"
-    },
-    "sso": {
-      "callback_url_tips": "Configure your SSO provider with this callback URL: {{url}}",
-      "client_id_description": "OAuth application client ID",
-      "client_secret_description": "OAuth application client secret",
-      "enable": "Enable Single Sign-On",
-      "enable_description": "Allow users to login with third-party accounts (like GitHub)",
-      "generic": {
-        "auth_url": "Authorization URL",
-        "client_id": "Client ID",
-        "client_secret": "Client Secret",
-        "scope": "Scope",
-        "token_url": "Token URL",
-        "user_id_field": "User ID Field",
-        "user_info_url": "User Info URL"
-      },
-      "github": {
-        "client_id": "GitHub Client ID",
-        "client_secret": "GitHub Client Secret"
-      },
-      "not_implemented_suffix": " [Not implemented yet]",
-      "provider": "Single Sign-On Provider",
-      "provider_description": "Choose the authentication provider for single sign-on",
-      "provider_fetch_failed": "Failed to load sign-on provider information",
-      "provider_fields": "OAuth Parameter",
-      "provider_fields_description": "Details of the login method you choose",
-      "provider_save_failed": "Failed to save sign-on provider settings",
-      "provider_settings_fetch_failed": "Failed to load sign-on provider settings",
-      "title": "Single Sign-On"
     },
     "title": "Settings",
     "update_1_2_7": {
@@ -1427,26 +1335,6 @@
       "target_description": "Use local SQLite or send metric data to remote MariaDB / MySQL / PostgreSQL.",
       "title": "Monitoring database upgrade"
     },
-    "xtermjs": {
-      "convert_eol": "Convert EOL",
-      "cursor_blink": "Cursor Blink",
-      "custom_css": "Custom CSS",
-      "custom_css_description": "Prefer a .terminal-page or .terminal-xterm-host prefix when writing rules.",
-      "font_family": "Font Family",
-      "font_size": "Font Size",
-      "reset_defaults": "Restore local defaults",
-      "scrollback": "Scrollback",
-      "terminal_padding": "Terminal Padding",
-      "theme_json": "Theme JSON",
-      "theme_json_description": "Only terminalOptions.theme is edited. Unknown keys are filtered on save.",
-      "theme_json_filtered": "Theme JSON filtered",
-      "theme_json_invalid": "Invalid theme JSON",
-      "theme_json_must_be_object": "Theme JSON must be a JSON object",
-      "title": "XtermJS",
-      "transparent_background": "Transparent Background",
-      "transparent_hint": "Enable transparency only if the container background is also transparent.",
-      "transparent_theme_hint": "Theme background is still opaque. Use rgba(...) or hsla(...)."
-    }
   },
   "status_settings": "Status Settings",
   "system": {
@@ -1459,7 +1347,6 @@
     "disconnect": "Disconnected",
     "no_active_connection": "No active connection",
     "reconnecting": "Connection lost. Reconnecting...",
-    "settings_error": "Could not load xterm settings; using defaults: {{message}}",
     "server": "Server",
     "clients_load_failed": "Failed to load servers",
     "title": "Terminal",

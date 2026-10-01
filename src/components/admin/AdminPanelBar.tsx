@@ -185,7 +185,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     (item) => item.bottom,
   )?.path;
 
-  // 根据路径自动展开子菜单（包含动态扩展项；plugin-page 用 query 定位文件，
+  // 根据路径自动展开子菜单。
   // 因此子菜单匹配基于 pathname 部分）
   useEffect(() => {
     const newState: { [key: string]: boolean } = {};
@@ -625,9 +625,8 @@ const SidebarItem = ({
 }) => {
   const location = useLocation();
   const isExternalLink = to.startsWith("http://") || to.startsWith("https://");
-  // 带 query 的菜单项（如 /admin/plugin-page?short=x）做全匹配；不带 query
-  // 的菜单项只比 pathname（如 /admin/plugins/config?short=x 点亮“插件配置”），
-  // 同时避免前缀兄弟路由（/admin/plugins 与 /admin/plugins/config）同时点亮。
+  // 带 query 的菜单项做全匹配；不带 query 的菜单项只比 pathname，
+  // 同时避免前缀兄弟路由同时点亮。
   const isActive =
     !isExternalLink &&
     to !== "/" &&
