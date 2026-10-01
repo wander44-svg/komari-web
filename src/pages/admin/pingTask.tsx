@@ -85,8 +85,12 @@ const AddButton: React.FC = () => {
   const [lossThreshold, setLossThreshold] = React.useState(20);
   const [lossWindowMinutes, setLossWindowMinutes] = React.useState(5);
   const [lossClients, setLossClients] = React.useState<string[]>([]);
-  const [lossAlertTemplate, setLossAlertTemplate] = React.useState("");
-  const [lossRecoveryTemplate, setLossRecoveryTemplate] = React.useState("");
+  const defaultLossTemplate =
+    "Clients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
+  const [lossAlertTemplate, setLossAlertTemplate] =
+    React.useState(defaultLossTemplate);
+  const [lossRecoveryTemplate, setLossRecoveryTemplate] =
+    React.useState(defaultLossTemplate);
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!defaultOn && selected.length === 0) {
@@ -125,8 +129,8 @@ const AddButton: React.FC = () => {
           setLossThreshold(20);
           setLossWindowMinutes(5);
           setLossClients([]);
-          setLossAlertTemplate("");
-          setLossRecoveryTemplate("");
+          setLossAlertTemplate(defaultLossTemplate);
+          setLossRecoveryTemplate(defaultLossTemplate);
           toast.success(t("common.success"));
         } else {
           response

@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => {
 
   // Supports configuring BASE_URL via environment variables, defaulting to the root path.
   const base: string = process.env.VITE_BASE_URL ? process.env.VITE_BASE_URL : '/';
+  const pwaBase = base.endsWith('/') ? base : `${base}/`;
   const baseConfig: UserConfig = {
     base: base,
     plugins: [
@@ -70,21 +71,22 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: "Komari Monitor",
           short_name: "Komari Monitor",
+          id: pwaBase,
           description: "A simple server monitor tool",
           theme_color: "#2563eb",
           background_color: "#ffffff",
           display: "standalone",
-          scope: base,
-          start_url: base,
+          scope: pwaBase,
+          start_url: pwaBase,
           icons: [
             {
-              src: "${base}assets/pwa-icon.webp",
+              src: `${pwaBase}assets/pwa-icon.webp`,
               sizes: "192x192",
               type: "image/webp",
               purpose: "maskable any",
             },
             {
-              src: "${base}assets/pwa-icon.webp",
+              src: `${pwaBase}assets/pwa-icon.webp`,
               sizes: "512x512",
               type: "image/webp",
               purpose: "maskable any",

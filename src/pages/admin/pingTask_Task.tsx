@@ -45,6 +45,9 @@ const getTaskSortableId = (task: { id?: number; name?: string; target?: string }
     ? `id-${task.id}`
     : `tmp-${task.name ?? ""}-${task.target ?? ""}`;
 
+const DEFAULT_LOSS_TEMPLATE =
+  "Clients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
+
 export const TaskView = ({ pingTasks }: { pingTasks: PingTask[] }) => {
   const { t } = useTranslation();
   const { refresh } = usePingTask();
@@ -206,8 +209,9 @@ const Row = ({
       task.loss_clients && task.loss_clients.length > 0
         ? task.loss_clients
         : task.clients || [],
-    loss_alert_template: task.loss_alert_template || "",
-    loss_recovery_template: task.loss_recovery_template || "",
+    loss_alert_template: task.loss_alert_template || DEFAULT_LOSS_TEMPLATE,
+    loss_recovery_template:
+      task.loss_recovery_template || DEFAULT_LOSS_TEMPLATE,
   });
 
   const submitEdit = (newForm: typeof form) => {
