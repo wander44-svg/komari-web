@@ -32,15 +32,21 @@ import { toast } from "sonner";
 import Loading from "@/components/loading";
 import Tips from "@/components/ui/tips";
 
-const OfflinePage = () => {
+export const OfflineNotificationSection = ({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) => {
   return (
     <OfflineNotificationProvider>
       <NodeDetailsProvider>
-        <InnerLayout />
+        <InnerLayout embedded={embedded} />
       </NodeDetailsProvider>
     </OfflineNotificationProvider>
   );
 };
+
+const OfflinePage = () => <OfflineNotificationSection />;
 const NotificationEditForm = ({
   initialValues,
   onSubmit,
@@ -116,7 +122,7 @@ const NotificationEditForm = ({
   );
 };
 
-const InnerLayout = () => {
+const InnerLayout = ({ embedded = false }: { embedded?: boolean }) => {
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<string[]>([]);
   const {
@@ -182,7 +188,11 @@ const InnerLayout = () => {
     return <div>Error: {onError?.message || onNodeError}</div>;
   }
   return (
-    <div className="km-page-admin-notification-offline flex flex-col gap-4 md:p-4 p-1">
+    <div
+      className={`km-page-admin-notification-offline flex flex-col gap-4 ${
+        embedded ? "pt-2" : "md:p-4 p-1"
+      }`}
+    >
       <Flex justify="between" align="center" wrap="wrap">
         <label className="text-2xl font-semibold">
           {t("notification.offline.full_title", "离线通知设置")}
@@ -295,8 +305,14 @@ const OfflineNotificationTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filtered.map((node) => (
-            <TableRow key={node.uuid}>
+          {filtered.map((node) => {
+            const notification = offlineNotification.find(
+              (item) => item.client === node.uuid
+            );
+            const enabled = notification?.enable ?? true;
+
+            return (
+              <TableRow key={node.uuid}>
               <TableCell>
                 <Checkbox
                   checked={selected.includes(node.uuid)}
@@ -313,18 +329,8 @@ const OfflineNotificationTable = ({
               </TableCell>
               <TableCell>{node.name}</TableCell>
               <TableCell>
-                <Badge
-                  color={
-                    offlineNotification.find((n) => n.client === node.uuid)
-                      ?.enable
-                      ? "green"
-                      : "red"
-                  }
-                >
-                  {offlineNotification.find((n) => n.client === node.uuid)
-                    ?.enable
-                    ? t("common.enabled")
-                    : t("common.disabled")}
+                <Badge color={enabled ? "green" : "red"}>
+                  {enabled ? t("common.enabled") : t("common.disabled")}
                 </Badge>
               </TableCell>
               {/* <TableCell>
@@ -351,13 +357,13 @@ const OfflineNotificationTable = ({
               </TableCell>
               <TableCell>
                 <ActionButtons
-                  offlineNotifications={offlineNotification.find(
-                    (n) => n.client === node.uuid
-                  )}
+                  client={node.uuid}
+                  offlineNotifications={notification}
                 />
               </TableCell>
-            </TableRow>
-          ))}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
@@ -365,8 +371,10 @@ const OfflineNotificationTable = ({
 };
 
 const ActionButtons = ({
+  client,
   offlineNotifications,
 }: {
+  client: string;
   offlineNotifications: OfflineNotification | undefined;
 }) => {
   const { t } = useTranslation();
@@ -390,7 +398,7 @@ const ActionButtons = ({
           <Dialog.Title>{t("common.edit")}</Dialog.Title>
           <NotificationEditForm
             initialValues={{
-              enable: offlineNotifications?.enable ?? false,
+              enable: offlineNotifications?.enable ?? true,
               cooldown: offlineNotifications?.cooldown ?? 1800,
               grace_period: offlineNotifications?.grace_period ?? 300,
             }}
@@ -402,7 +410,7 @@ const ActionButtons = ({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify([
                   {
-                    client: offlineNotifications?.client,
+                    client,
                     ...values,
                   },
                 ]),

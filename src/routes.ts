@@ -179,9 +179,10 @@ export const routes: RouteObject[] = [
           },
           {
             path: "offline",
-            element: React.createElement(
-              lazy(() => import("./pages/admin/notification/offline"))
-            ),
+            element: React.createElement(Navigate, {
+              to: "/admin/notification/general",
+              replace: true,
+            }),
           },
           {
             path: "general",

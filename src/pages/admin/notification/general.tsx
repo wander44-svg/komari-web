@@ -9,6 +9,8 @@ import {
   SettingCardSwitch,
 } from "@/components/admin/SettingCard";
 import { toast } from "sonner";
+import { OfflineNotificationSection } from "./offline";
+
 const GeneralNotification = () => {
   return (
     <Flex direction="column" gap="3" className="km-page-admin-notification-general km-notification-general-form p-0 md:p-4">
@@ -86,6 +88,7 @@ const Inner = () => {
           );
         }}
       />
+      <OfflineNotificationSection embedded />
     </>
   );
 };

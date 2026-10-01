@@ -7,8 +7,7 @@
       "labelKey": "notification.title", "path": "/admin/notification/channels", "icon": "Bell",
       "children": [
         { "labelKey": "notification.channels.title", "path": "/admin/notification/channels", "icon": "MessageCircleMore" },
-        { "labelKey": "notification.general.title", "path": "/admin/notification/general", "icon": "Ellipsis" },
-        { "labelKey": "notification.offline.title", "path": "/admin/notification/offline", "icon": "Unplug" }
+        { "labelKey": "notification.general.title", "path": "/admin/notification/general", "icon": "Ellipsis" }
       ]
     },
     {
