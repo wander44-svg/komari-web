@@ -46,7 +46,16 @@ const getTaskSortableId = (task: { id?: number; name?: string; target?: string }
     : `tmp-${task.name ?? ""}-${task.target ?? ""}`;
 
 const DEFAULT_LOSS_TEMPLATE =
-  "Clients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
+  "{{emoji}}\nClients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
+
+const normalizeLossTemplate = (template?: string) =>
+  !template ||
+  template ===
+    "Clients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}" ||
+  template.startsWith("⚠️ 丢包告警") ||
+  template.startsWith("✅ 丢包恢复")
+    ? DEFAULT_LOSS_TEMPLATE
+    : template;
 
 export const TaskView = ({ pingTasks }: { pingTasks: PingTask[] }) => {
   const { t } = useTranslation();
@@ -209,9 +218,8 @@ const Row = ({
       task.loss_clients && task.loss_clients.length > 0
         ? task.loss_clients
         : task.clients || [],
-    loss_alert_template: task.loss_alert_template || DEFAULT_LOSS_TEMPLATE,
-    loss_recovery_template:
-      task.loss_recovery_template || DEFAULT_LOSS_TEMPLATE,
+    loss_alert_template: normalizeLossTemplate(task.loss_alert_template),
+    loss_recovery_template: normalizeLossTemplate(task.loss_recovery_template),
   });
 
   const submitEdit = (newForm: typeof form) => {

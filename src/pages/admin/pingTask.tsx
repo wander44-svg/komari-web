@@ -86,7 +86,7 @@ const AddButton: React.FC = () => {
   const [lossWindowMinutes, setLossWindowMinutes] = React.useState(5);
   const [lossClients, setLossClients] = React.useState<string[]>([]);
   const defaultLossTemplate =
-    "Clients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
+    "{{emoji}}\nClients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
   const [lossAlertTemplate, setLossAlertTemplate] =
     React.useState(defaultLossTemplate);
   const [lossRecoveryTemplate, setLossRecoveryTemplate] =
