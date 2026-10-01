@@ -9,8 +9,7 @@
         { "labelKey": "notification.channels.title", "path": "/admin/notification/channels", "icon": "MessageCircleMore" },
         { "labelKey": "notification.general.title", "path": "/admin/notification/general", "icon": "Ellipsis" },
         { "labelKey": "notification.load.title", "path": "/admin/notification/load", "icon": "Activity" },
-        { "labelKey": "notification.traffic_report.title", "path": "/admin/notification/traffic-report", "icon": "TrendingUp" },
-        { "labelKey": "sessions.title", "path": "/admin/sessions", "icon": "Users" }
+        { "labelKey": "notification.traffic_report.title", "path": "/admin/notification/traffic-report", "icon": "TrendingUp" }
       ]
     },
     {
@@ -34,6 +33,7 @@
       "labelKey": "account.menu", "path": "/admin/account", "icon": "UserCircle",
       "children": [
         { "labelKey": "account.title", "path": "/admin/account", "icon": "UserCircle" },
+        { "labelKey": "sessions.title", "path": "/admin/sessions", "icon": "Users" },
         { "labelKey": "common.about", "path": "/admin/about", "icon": "AtSign" }
       ]
     },

@@ -49,13 +49,7 @@ const DEFAULT_LOSS_TEMPLATE =
   "{{emoji}}\nClients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
 
 const normalizeLossTemplate = (template?: string) =>
-  !template ||
-  template ===
-    "Clients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}" ||
-  template.startsWith("⚠️ 丢包告警") ||
-  template.startsWith("✅ 丢包恢复")
-    ? DEFAULT_LOSS_TEMPLATE
-    : template;
+  template && template.trim() ? template : DEFAULT_LOSS_TEMPLATE;
 
 export const TaskView = ({ pingTasks }: { pingTasks: PingTask[] }) => {
   const { t } = useTranslation();
