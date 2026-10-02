@@ -1100,9 +1100,7 @@ const DashboardContent = () => {
         </Card>
       </Flex>
 
-      {analyticsReady && (
-        <>
-          <Flex gap="4" wrap="wrap" align="stretch">
+      <Flex gap="4" wrap="wrap" align="stretch">
         <Card className="flex-1 min-w-[320px]">
           <Flex direction="column" gap="3">
             <Flex justify="between" align="center" wrap="wrap" gap="2">
@@ -1437,41 +1435,39 @@ const DashboardContent = () => {
             />
           </Card>
         </Flex>
-          </Flex>
+      </Flex>
 
-          <Card>
-            <Flex direction="column" gap="3">
-              <Flex gap="2" align="center" style={{ color: "var(--gray-10)" }}>
-                <Gauge size={18} />
-                <Text size="3" weight="bold">
-                  {t("nodeCard.ping", "Ping")}
+      <Card>
+        <Flex direction="column" gap="3">
+          <Flex gap="2" align="center" style={{ color: "var(--gray-10)" }}>
+            <Gauge size={18} />
+            <Text size="3" weight="bold">
+              {t("nodeCard.ping", "Ping")}
+            </Text>
+          </Flex>
+          <Flex gap="6" wrap="wrap">
+            {renderLatencyColumn(
+              t("dashboard.stableLatency", "Most stable latency"),
+              stableLatencyItems,
+              renderLatencyValue,
+            )}
+            {renderLatencyColumn(
+              t("dashboard.unstableLatency", "Most unstable latency"),
+              unstableLatencyItems,
+              renderLatencyValue,
+            )}
+            {renderLatencyColumn(
+              t("dashboard.highestLoss", "Highest packet loss"),
+              highestLossItems,
+              (item) => (
+                <Text size="2" className="whitespace-nowrap">
+                  {item.loss.toFixed(1)}%
                 </Text>
-              </Flex>
-              <Flex gap="6" wrap="wrap">
-                {renderLatencyColumn(
-                  t("dashboard.stableLatency", "Most stable latency"),
-                  stableLatencyItems,
-                  renderLatencyValue,
-                )}
-                {renderLatencyColumn(
-                  t("dashboard.unstableLatency", "Most unstable latency"),
-                  unstableLatencyItems,
-                  renderLatencyValue,
-                )}
-                {renderLatencyColumn(
-                  t("dashboard.highestLoss", "Highest packet loss"),
-                  highestLossItems,
-                  (item) => (
-                    <Text size="2" className="whitespace-nowrap">
-                      {item.loss.toFixed(1)}%
-                    </Text>
-                  ),
-                )}
-              </Flex>
-            </Flex>
-          </Card>
-        </>
-      )}
+              ),
+            )}
+          </Flex>
+        </Flex>
+      </Card>
     </Flex>
   );
 };
