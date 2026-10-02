@@ -229,9 +229,6 @@ const AddButton: React.FC = () => {
                     value={lossWindowMinutes}
                     onChange={(e) => setLossWindowMinutes(Number(e.target.value))}
                   />
-                  <label className="text-xs text-gray-500">
-                    {t("ping.loss_window_help")}
-                  </label>
                   <label>{t("ping.loss_servers")}</label>
                   <NodeSelectorDialog
                     value={lossClients.length > 0 ? lossClients : selected}

@@ -465,9 +465,6 @@ const Row = ({
                       }
                       required
                     />
-                    <label className="text-xs text-gray-500">
-                      {t("ping.loss_window_help")}
-                    </label>
                     <label>{t("ping.loss_servers")}</label>
                     <NodeSelectorDialog
                       value={form.loss_clients}

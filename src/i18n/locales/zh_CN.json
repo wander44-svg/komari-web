@@ -771,7 +771,6 @@
     "loss_servers": "通知服务器",
     "loss_threshold": "丢包率阈值（%）",
     "loss_window": "统计窗口（分钟）",
-    "loss_window_help": "推荐 5 分钟滑动窗口，连续两次超过阈值才通知，减少瞬时抖动。",
     "server_view": "服务器视图",
     "target": "目标",
     "task": "任务",
