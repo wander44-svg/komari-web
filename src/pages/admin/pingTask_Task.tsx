@@ -45,12 +45,6 @@ const getTaskSortableId = (task: { id?: number; name?: string; target?: string }
     ? `id-${task.id}`
     : `tmp-${task.name ?? ""}-${task.target ?? ""}`;
 
-const DEFAULT_LOSS_TEMPLATE =
-  "{{emoji}}\nClients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
-
-const normalizeLossTemplate = (template?: string) =>
-  template && template.trim() ? template : DEFAULT_LOSS_TEMPLATE;
-
 export const TaskView = ({ pingTasks }: { pingTasks: PingTask[] }) => {
   const { t } = useTranslation();
   const { refresh } = usePingTask();
@@ -212,8 +206,6 @@ const Row = ({
       task.loss_clients && task.loss_clients.length > 0
         ? task.loss_clients
         : task.clients || [],
-    loss_alert_template: normalizeLossTemplate(task.loss_alert_template),
-    loss_recovery_template: normalizeLossTemplate(task.loss_recovery_template),
   });
 
   const submitEdit = (newForm: typeof form) => {
@@ -239,8 +231,6 @@ const Row = ({
             loss_threshold: newForm.loss_threshold,
             loss_window_minutes: newForm.loss_window_minutes,
             loss_clients: newForm.loss_clients,
-            loss_alert_template: newForm.loss_alert_template,
-            loss_recovery_template: newForm.loss_recovery_template,
           },
         ],
       }),
@@ -486,27 +476,6 @@ const Row = ({
                     />
                     <label className="text-sm text-gray-500">
                       {t("common.selected", { count: form.loss_clients.length })}
-                    </label>
-                    <label>{t("ping.loss_alert_template")}</label>
-                    <textarea
-                      className="min-h-24 rounded-md border bg-transparent p-2 text-sm"
-                      value={form.loss_alert_template}
-                      placeholder={t("ping.loss_alert_placeholder")}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, loss_alert_template: e.target.value }))
-                      }
-                    />
-                    <label>{t("ping.loss_recovery_template")}</label>
-                    <textarea
-                      className="min-h-24 rounded-md border bg-transparent p-2 text-sm"
-                      value={form.loss_recovery_template}
-                      placeholder={t("ping.loss_recovery_placeholder")}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, loss_recovery_template: e.target.value }))
-                      }
-                    />
-                    <label className="text-xs text-gray-500">
-                      {t("ping.loss_template_help")}
                     </label>
                   </>
                 )}

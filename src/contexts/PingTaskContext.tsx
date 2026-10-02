@@ -11,8 +11,6 @@ export interface PingTask {
   loss_threshold?: number;
   loss_window_minutes?: number;
   loss_clients?: string[];
-  loss_alert_template?: string;
-  loss_recovery_template?: string;
   [property: string]: any;
 }
 

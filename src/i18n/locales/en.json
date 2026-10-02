@@ -767,11 +767,6 @@
     "loss_window": "Window (minutes)",
     "loss_window_help": "Recommended: a 5-minute sliding window; two consecutive breaches reduce transient noise.",
     "loss_servers": "Notification servers",
-    "loss_alert_template": "Loss alert template",
-    "loss_recovery_template": "Loss recovery template",
-    "loss_alert_placeholder": "Leave blank to use the default template",
-    "loss_recovery_placeholder": "Leave blank to use the default template",
-    "loss_template_help": "Variables: {{task}}, {{client}}, {{loss_rate}}, {{window}}, {{time}}",
     "server_view": "Server View",
     "target": "Target",
     "task": "Task",
@@ -1219,7 +1214,7 @@
         "endpoint_help": "Request endpoint for the Telegram Bot API, usually `https://api.telegram.org/bot`"
       },
       "template": "Notification template",
-      "template_description": "Komari will send notifications according to the notification template",
+      "template_description": "Komari will send notifications according to this template; use {{threshold_line}} to show the packet-loss threshold",
       "test_description": "Send a test message",
       "test_title": "Send test message",
       "title": "Notifications"

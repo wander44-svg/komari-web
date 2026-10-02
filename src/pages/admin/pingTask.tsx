@@ -85,12 +85,6 @@ const AddButton: React.FC = () => {
   const [lossThreshold, setLossThreshold] = React.useState(20);
   const [lossWindowMinutes, setLossWindowMinutes] = React.useState(5);
   const [lossClients, setLossClients] = React.useState<string[]>([]);
-  const defaultLossTemplate =
-    "{{emoji}}\nClients: {{client}}\nMessage: {{task}}\nLossRate: {{loss_rate}}\nTime: {{time}}";
-  const [lossAlertTemplate, setLossAlertTemplate] =
-    React.useState(defaultLossTemplate);
-  const [lossRecoveryTemplate, setLossRecoveryTemplate] =
-    React.useState(defaultLossTemplate);
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!defaultOn && selected.length === 0) {
@@ -108,8 +102,6 @@ const AddButton: React.FC = () => {
       loss_threshold: lossThreshold,
       loss_window_minutes: lossWindowMinutes,
       loss_clients: lossClients.length > 0 ? lossClients : selected,
-      loss_alert_template: lossAlertTemplate,
-      loss_recovery_template: lossRecoveryTemplate,
     };
     setSaving(true);
     fetch("/api/admin/ping/add", {
@@ -129,8 +121,6 @@ const AddButton: React.FC = () => {
           setLossThreshold(20);
           setLossWindowMinutes(5);
           setLossClients([]);
-          setLossAlertTemplate(defaultLossTemplate);
-          setLossRecoveryTemplate(defaultLossTemplate);
           toast.success(t("common.success"));
         } else {
           response
@@ -250,23 +240,6 @@ const AddButton: React.FC = () => {
                   />
                   <label className="text-sm text-gray-500">
                     {t("common.selected", { count: (lossClients.length > 0 ? lossClients : selected).length })}
-                  </label>
-                  <label>{t("ping.loss_alert_template")}</label>
-                  <textarea
-                    className="min-h-24 rounded-md border bg-transparent p-2 text-sm"
-                    value={lossAlertTemplate}
-                    placeholder={t("ping.loss_alert_placeholder")}
-                    onChange={(e) => setLossAlertTemplate(e.target.value)}
-                  />
-                  <label>{t("ping.loss_recovery_template")}</label>
-                  <textarea
-                    className="min-h-24 rounded-md border bg-transparent p-2 text-sm"
-                    value={lossRecoveryTemplate}
-                    placeholder={t("ping.loss_recovery_placeholder")}
-                    onChange={(e) => setLossRecoveryTemplate(e.target.value)}
-                  />
-                  <label className="text-xs text-gray-500">
-                    {t("ping.loss_template_help")}
                   </label>
                 </>
               )}
