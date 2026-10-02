@@ -1,10 +1,4 @@
-import React, {
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Button,
@@ -426,7 +420,6 @@ const DashboardContent = () => {
   );
   const [pingStats, setPingStats] = useState<PingMetricStat[]>([]);
   const [pingTasks, setPingTasks] = useState<PublicPingTask[]>([]);
-  const [analyticsReady, setAnalyticsReady] = useState(false);
   const [renewingUuid, setRenewingUuid] = useState<string | null>(null);
   const [renewedUuids, setRenewedUuids] = useState<Set<string>>(new Set());
 
@@ -525,10 +518,7 @@ const DashboardContent = () => {
         max_points: 96,
         fill_empty: true,
       });
-      // The online-rate card is the first useful piece of information on a
-      // mobile dashboard. Keep the large 24-hour response and its derived
-      // rankings out of the urgent render that updates that card.
-      startTransition(() => setMetricsRes(res ?? null));
+      setMetricsRes(res ?? null);
     } catch (e) {
       console.error("Failed to fetch dashboard metrics:", e);
     }
@@ -558,10 +548,8 @@ const DashboardContent = () => {
           () => [],
         ),
       ]);
-      startTransition(() => {
-        setPingStats(Array.isArray(statsRes?.stats) ? statsRes.stats : []);
-        setPingTasks(Array.isArray(tasksRes) ? tasksRes : []);
-      });
+      setPingStats(Array.isArray(statsRes?.stats) ? statsRes.stats : []);
+      setPingTasks(Array.isArray(tasksRes) ? tasksRes : []);
     } catch (e) {
       console.error("Failed to fetch ping stats:", e);
     }
@@ -571,31 +559,20 @@ const DashboardContent = () => {
     setRefreshing(true);
     miniChartCache.clear();
     try {
-      // NodeListProvider already loads the node list when the admin shell is
-      // mounted. Calling refresh() here as well caused two simultaneous node
-      // requests on every dashboard visit. Only refresh it for an explicit
-      // user refresh; the initial visit needs just the live status request.
-      const coreRequests: Promise<unknown>[] = [fetchLatest()];
+      // Keep the original dashboard loading order: all independent data
+      // requests start together and each card fills when its own response is
+      // ready. NodeListProvider already loads nodes on shell mount, so avoid
+      // a second node request on the initial visit.
+      const requests: Promise<unknown>[] = [
+        fetchLatest(),
+        fetchMetrics(),
+        fetchDbSize(),
+        fetchPingStats(),
+      ];
       if (includeNodeRefresh) {
         refresh();
       }
-      await Promise.allSettled(coreRequests);
-
-      // Let the browser paint the online-rate card before parsing the large
-      // 24-hour metrics response and rendering Recharts/ranking cards. The
-      // ring itself has a 500ms transition; waiting a little longer than that
-      // prevents the analytics response from interrupting the animation near
-      // its end on slower phones.
-      await new Promise<void>((resolve) => {
-        if (typeof requestAnimationFrame === "function") {
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => setTimeout(resolve, 700)),
-          );
-        } else {
-          setTimeout(resolve, 700);
-        }
-      });
-      await Promise.allSettled([fetchMetrics(), fetchDbSize(), fetchPingStats()]);
+      await Promise.allSettled(requests);
     } finally {
       setRefreshing(false);
     }
@@ -605,50 +582,33 @@ const DashboardContent = () => {
     void fetchAll();
   }, [fetchAll]);
 
-  useEffect(() => {
-    // Do not mount Recharts or run the ranking reductions during the first
-    // interaction window. The summary cards remain responsive while the
-    // browser finishes the initial layout and online-status paint.
-    const timer = window.setTimeout(() => {
-      startTransition(() => setAnalyticsReady(true));
-    }, 1200);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   // 由一次 queryMetrics 响应派生各指标卡数据；nodeList 就绪后
   // nodeNameMap/memTotalMap 变化会自动重算，无需再次请求。
-  const traffic = useMemo(
-    () => (analyticsReady ? computeTrafficSummary(metricsRes) : null),
-    [analyticsReady, metricsRes],
-  );
+  const traffic = useMemo(() => computeTrafficSummary(metricsRes), [metricsRes]);
 
   const topCpu = useMemo<TopRankItem[]>(
     () =>
-      analyticsReady
-        ? computeTopAverageItems(
-            metricsRes,
-            CPU_METRIC_KEYS[0],
-            nodeNameMap,
-            (_uuid, value) => value,
-          )
-        : [],
-    [analyticsReady, metricsRes, nodeNameMap],
+      computeTopAverageItems(
+        metricsRes,
+        CPU_METRIC_KEYS[0],
+        nodeNameMap,
+        (_uuid, value) => value,
+      ),
+    [metricsRes, nodeNameMap],
   );
 
   const topMem = useMemo<TopRankItem[]>(
     () =>
-      analyticsReady
-        ? computeTopAverageItems(
-            metricsRes,
-            MEM_METRIC_KEYS[0],
-            nodeNameMap,
-            (uuid, value) => {
-              const totalBytes = memTotalMap.get(uuid) ?? 0;
-              return totalBytes > 0 ? (value / totalBytes) * 100 : 0;
-            },
-          )
-        : [],
-    [analyticsReady, metricsRes, nodeNameMap, memTotalMap],
+      computeTopAverageItems(
+        metricsRes,
+        MEM_METRIC_KEYS[0],
+        nodeNameMap,
+        (uuid, value) => {
+          const totalBytes = memTotalMap.get(uuid) ?? 0;
+          return totalBytes > 0 ? (value / totalBytes) * 100 : 0;
+        },
+      ),
+    [metricsRes, nodeNameMap, memTotalMap],
   );
 
   const handleRenew = async (node: NodeBasicInfo) => {
@@ -736,7 +696,6 @@ const DashboardContent = () => {
   } satisfies ChartConfig;
 
   const pingP95Map = useMemo(() => {
-    if (!analyticsReady) return new Map<string, number>();
     const map = new Map<string, number>();
     for (const series of metricsRes?.series ?? []) {
       const taskId = pingTaskId(series.tags);
@@ -752,10 +711,9 @@ const DashboardContent = () => {
       }
     }
     return map;
-  }, [analyticsReady, metricsRes]);
+  }, [metricsRes]);
 
   const pingRankItems = useMemo(() => {
-    if (!analyticsReady) return [];
     const taskMap = new Map(
       pingTasks.map((task) => [String(task.id), task]),
     );
@@ -780,7 +738,7 @@ const DashboardContent = () => {
         valid: stat.valid,
       } satisfies PingRankItem;
     });
-  }, [analyticsReady, pingStats, pingP95Map, pingTasks, nodeNameMap, t]);
+  }, [pingStats, pingP95Map, pingTasks, nodeNameMap, t]);
 
   // 无有效延迟样本(如 100% 丢包)的节点波动无意义，不参与稳定性排名
   const stableLatencyItems = useMemo(
