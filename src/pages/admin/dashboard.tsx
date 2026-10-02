@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Badge,
   Button,
@@ -514,7 +520,10 @@ const DashboardContent = () => {
         },
         fill_empty: true,
       });
-      setMetricsRes(res ?? null);
+      // The online-rate card is the first useful piece of information on a
+      // mobile dashboard. Keep the large 24-hour response and its derived
+      // rankings out of the urgent render that updates that card.
+      startTransition(() => setMetricsRes(res ?? null));
     } catch (e) {
       console.error("Failed to fetch dashboard metrics:", e);
     }
@@ -544,24 +553,40 @@ const DashboardContent = () => {
           () => [],
         ),
       ]);
-      setPingStats(Array.isArray(statsRes?.stats) ? statsRes.stats : []);
-      setPingTasks(Array.isArray(tasksRes) ? tasksRes : []);
+      startTransition(() => {
+        setPingStats(Array.isArray(statsRes?.stats) ? statsRes.stats : []);
+        setPingTasks(Array.isArray(tasksRes) ? tasksRes : []);
+      });
     } catch (e) {
       console.error("Failed to fetch ping stats:", e);
     }
   }, [call]);
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (includeNodeRefresh = false) => {
     setRefreshing(true);
     miniChartCache.clear();
     try {
-      await Promise.allSettled([
-        refresh(),
-        fetchLatest(),
-        fetchMetrics(),
-        fetchDbSize(),
-        fetchPingStats(),
-      ]);
+      // NodeListProvider already loads the node list when the admin shell is
+      // mounted. Calling refresh() here as well caused two simultaneous node
+      // requests on every dashboard visit. Only refresh it for an explicit
+      // user refresh; the initial visit needs just the live status request.
+      const coreRequests: Promise<unknown>[] = [fetchLatest()];
+      if (includeNodeRefresh) {
+        refresh();
+      }
+      await Promise.allSettled(coreRequests);
+
+      // Let the browser paint the online-rate card before parsing the large
+      // 24-hour metrics response and rendering Recharts/ranking cards. This
+      // keeps the first mobile frame responsive without removing any data.
+      await new Promise<void>((resolve) => {
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        } else {
+          setTimeout(resolve, 0);
+        }
+      });
+      await Promise.allSettled([fetchMetrics(), fetchDbSize(), fetchPingStats()]);
     } finally {
       setRefreshing(false);
     }
@@ -860,7 +885,7 @@ const DashboardContent = () => {
           size="1"
           variant="soft"
           disabled={refreshing}
-          onClick={() => void fetchAll()}
+          onClick={() => void fetchAll(true)}
         >
           <RefreshCw size={14} />
           {t("common.refresh", "Refresh")}
