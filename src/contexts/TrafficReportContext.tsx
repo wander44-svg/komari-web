@@ -30,7 +30,7 @@ export const TrafficReportNotificationProvider: React.FC<{
   const firstLoad = React.useRef(true);
   const [error, setError] = React.useState<Error | null>(null);
 
-  const refresh = async () => {
+  const refresh = React.useCallback(async () => {
     if (firstLoad.current) setLoading(true);
     try {
       setError(null);
@@ -49,11 +49,11 @@ export const TrafficReportNotificationProvider: React.FC<{
         firstLoad.current = false;
       }
     }
-  };
+  }, [t]);
 
   React.useEffect(() => {
     refresh();
-  }, []);
+  }, [refresh]);
 
   return (
     <TrafficReportContext.Provider

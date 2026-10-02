@@ -142,7 +142,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     return () => {
       ignore = true;
     };
-  }, [currentTheme, refreshVersion]);
+  }, [currentLanguage, currentTheme, refreshVersion, t]);
   useEffect(() => {
     const fetchVersionInfo = async () => {
       try {
@@ -158,7 +158,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     };
 
     fetchVersionInfo();
-  }, []);
+  }, [call]);
 
   // Only change the drawer when crossing the mobile breakpoint.  Resizes and
   // PWA restores must not overwrite the user's manually collapsed state.
@@ -169,7 +169,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     }
   }, [isMobile]);
 
-  // 主题配置和插件注入页面分别作为“主题”“插件”主菜单的二级菜单。
+  // 主题配置页面作为“主题”主菜单的二级菜单。
   const mergedBaseMenuItems: ExtendedMenuItem[] = useMemo(() => {
     return baseMenuItems.map((item) => {
       if (item.labelKey === "theme.menu" && extraMenuItems.length > 0) {

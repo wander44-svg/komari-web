@@ -39,7 +39,10 @@ interface ThemeConfigResponse {
 const ThemeManaged: React.FC = () => {
   const { publicInfo, refresh } = usePublicInfo();
   const theme = publicInfo?.theme;
-  const themeSettings = publicInfo?.theme_settings || {}; // 当前值
+  const themeSettings = useMemo(
+    () => publicInfo?.theme_settings || {},
+    [publicInfo?.theme_settings],
+  ); // 当前值
   const { t, i18n } = useTranslation();
 
   const currentLanguage =

@@ -232,7 +232,7 @@ const TwoFactorDisabled = () => {
         .catch((err) => toast.error(err.message))
         .finally(() => setIsLoading(false));
     }
-  }, [isOpen]);
+  }, [isOpen, t]);
 
   const handleEnable2fa = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -13,10 +13,10 @@ import { Dialog, Flex, Button } from "@radix-ui/themes";
 import { UserAgentHelper } from "@/utils/UserAgentHelper";
 import Loading from "@/components/loading";
 type Resp = {
-  current: string;
+  current_id: string;
   data: Array<{
     uuid: string;
-    session: string;
+    id: string;
     user_agent: string;
     ip: string;
     login_method: string;
@@ -49,11 +49,11 @@ export default function Sessions() {
   }, []);
 
   function deleteSession(sessionId: string) {
-    const isCurrent = sessionId === sessions?.current;
+    const isCurrent = sessionId === sessions?.current_id;
     fetch("/api/admin/session/remove", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session: sessionId }),
+      body: JSON.stringify({ session_id: sessionId }),
     })
       .then((response) => response.json())
       .then((data) => {
@@ -65,7 +65,7 @@ export default function Sessions() {
           }
           setSessions((prev) => ({
             ...prev!,
-            data: prev?.data.filter((s) => s.session !== sessionId) || [],
+            data: prev?.data.filter((s) => s.id !== sessionId) || [],
           }));
         } else {
           console.error("Failed to delete session:", data);
@@ -146,9 +146,9 @@ export default function Sessions() {
           </TableHeader>
           <TableBody>
             {sessions.data.map((s) => {
-              const isCurrent = s.session === sessions.current;
+              const isCurrent = s.id === sessions.current_id;
               return (
-                <TableRow key={`${s.session}-${s.created_at}`} className="km-session-item">
+                <TableRow key={`${s.id}-${s.created_at}`} className="km-session-item">
                   <TableCell>
                     <Dialog.Root>
                       <Dialog.Trigger>
@@ -253,7 +253,7 @@ export default function Sessions() {
                           <Dialog.Trigger>
                             <Button
                               color="red"
-                              onClick={() => deleteSession(s.session)}
+                              onClick={() => deleteSession(s.id)}
                             >
                               {t("common.delete")}
                             </Button>

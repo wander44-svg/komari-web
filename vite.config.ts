@@ -94,7 +94,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          // HTML, API, theme and plugin responses are dynamic. Keep navigation
+          // HTML, API and theme responses are dynamic. Keep navigation
           // and runtime requests on the network; precache only build assets.
           globPatterns: ["**/*.{js,css,ico,webp}"],
           maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
@@ -116,18 +116,6 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: [
           { find: "@", replacement: path.resolve(__dirname, "./src") },
-          {
-            find: /^monaco-editor-codicon\.css$/,
-            replacement: path.resolve(
-              __dirname,
-              "node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css",
-            ),
-          },
-        // Force xterm to use the CJS build to avoid a rollup bug where `||=` in
-        // xterm.mjs is incorrectly lowered to `void 0||(i={})` with an undeclared `i`,
-        // causing `ReferenceError: i is not defined` at requestMode when vi sends DECRQM sequences.
-        // Regex to match only the bare specifier, not subpaths like @xterm/xterm/css/xterm.css.
-        { find: /^@xterm\/xterm$/, replacement: path.resolve(__dirname, "node_modules/@xterm/xterm/lib/xterm.js") },
       ],
     },
     build: {

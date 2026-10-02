@@ -29,17 +29,11 @@ const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onL
     const [errorMsg, setErrorMsg] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
     const [require2FA, setRequire2FA] = React.useState(false);
-    const [open, setOpen] = React.useState(autoOpen || false);
+    const [open, setOpen] = React.useState(autoOpen);
     const fieldId = React.useId().replace(/:/g, "");
   const passwordLoginEnabled = true;
   // Validate inputs (仅在启用密码登录时需要)
   const isFormValid = passwordLoginEnabled && username.trim() !== "" && password.trim() !== "";
-    //console.log(autoOpen, open);
-    React.useEffect(() => {
-      if (autoOpen) {
-        setOpen(true);
-      }
-    }, [autoOpen]);
     // Handle login
     const handleLogin = async () => {
       if (!isFormValid) {
