@@ -67,7 +67,7 @@ export const PublicInfoProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [publicInfo, setPublicInfo] = React.useState<PublicInfo | null>(null);
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
   //const { call } = useRPC2Call();
   // 公共信息使用public，避免在私有站点的情况下RPC返回401

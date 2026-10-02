@@ -482,12 +482,10 @@
       "menu": {
         "edit": "编辑",
         "file": "文件",
-        "terminal": "终端",
         "view": "视图"
       },
       "minimap": "缩略图",
       "no_symbols": "未找到符号",
-      "open_terminal_dock": "在底部打开终端",
       "outline": "大纲",
       "paste": "粘贴",
       "preview_failed": "无法预览此文件",
@@ -520,7 +518,6 @@
     "new_file": "新建文件",
     "new_folder": "新建文件夹",
     "no_results": "没有搜索结果",
-    "no_server": "打开终端标签页后即可浏览对应服务器文件",
     "open": "打开",
     "open_in_editor": "在编辑器中打开",
     "owner": "用户",
@@ -1328,58 +1325,6 @@
   "status_settings": "状态显示设置",
   "system": {
     "title": "系统"
-  },
-  "terminal": {
-    "2fa_code_prompt": "请输入 2FA 验证码: ",
-    "2fa_prompt": "需要双因素认证。",
-    "clients_load_failed": "服务器加载失败",
-    "close_others": "其他",
-    "close_tab": "关闭标签页",
-    "close_tabs": "关闭",
-    "close_to_left": "左侧",
-    "close_to_right": "右侧",
-    "color_tab": "更改选项卡颜色",
-    "default_color": "默认颜色",
-    "disconnect": "连接已断开",
-    "duplicate_tab": "复制标签页",
-    "export_text": "导出文本",
-    "find": "查找",
-    "no_active_connection": "没有活动连接",
-    "otp_invalid": "2FA 验证码无效或已过期",
-    "reconnecting": "连接已断开，正在重新连接...",
-    "rename_tab": "重命名选项卡",
-    "resource_monitor": {
-      "close": "隐藏资源小窗",
-      "load_error": "实时数据加载失败",
-      "open": "显示资源小窗",
-      "title": "资源小窗",
-      "waiting": "等待数据..."
-    },
-    "search": {
-      "close": "关闭",
-      "match_case": "区分大小写",
-      "next": "下一个",
-      "placeholder": "查找",
-      "prev": "上一个",
-      "use_regex": "正则表达式"
-    },
-    "server": "服务器",
-    "tabs": {
-      "choose_server": "选择服务器",
-      "connecting": "正在连接...",
-      "empty_action": "连接到服务器",
-      "empty_title": "暂无连接到的服务器",
-      "loading_servers": "正在加载服务器...",
-      "new_tab": "新建选项卡",
-      "no_servers": "没有可用的服务器",
-      "open_terminal": "打开终端",
-      "open_workbench": "打开工作台",
-      "scroll_left": "向左滚动选项卡",
-      "scroll_right": "向右滚动选项卡",
-      "title": "终端选项卡"
-    },
-    "title": "终端",
-    "title_with_sessions": "终端 - {{name}}（{{count}} 个会话）"
   },
   "theme": {
     "active": "当前使用",

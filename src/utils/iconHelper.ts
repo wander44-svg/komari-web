@@ -19,13 +19,11 @@ import {
   Palette,
   Code,
   Globe,
-  Terminal,
   Database,
   Store,
   Blocks,
   Settings2,
   LayoutDashboard,
-  SquareTerminal
 } from "lucide-react";
 
 
@@ -50,11 +48,9 @@ export const iconMap: Record<string, React.ComponentType<any>> = {
   Palette,
   Code,
   Globe,
-  Terminal,
   Database,
   Store,
   Blocks,
   Settings2,
   LayoutDashboard,
-  SquareTerminal,
 };

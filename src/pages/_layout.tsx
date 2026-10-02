@@ -4,12 +4,24 @@ import NavBar from "../components/NavBar";
 import { Outlet } from "react-router-dom";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import Loading from "@/components/loading";
 
 const IndexLayout = () => {
   // 使用我们的LiveDataContext
   const InnerLayout = () => {
-    const { publicInfo } = usePublicInfo();
+    const { publicInfo, isLoading, error } = usePublicInfo();
     const isMobile = useIsMobile();
+
+    // Keep the first paint stable until the public theme/layout settings are
+    // known. Otherwise the default 100vw shell is replaced one render later
+    // by the configured background and width, producing a first-visit flash.
+    if (!publicInfo && isLoading && !error) {
+      return (
+        <div className="km-layout layout flex min-h-screen w-full items-center justify-center bg-accent-1">
+          <Loading text="" />
+        </div>
+      );
+    }
     const bgUrlDesktop = publicInfo?.theme_settings?.backgroundImageUrlDesktop;
     const bgUrlMobile = publicInfo?.theme_settings?.backgroundImageUrlMobile;
     const bgUrl = isMobile ? bgUrlMobile || bgUrlDesktop : bgUrlDesktop;

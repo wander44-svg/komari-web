@@ -322,7 +322,10 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
         <AnimatePresence>
           <motion.div
             variants={sidebarVariants}
-            initial="closed"
+            // The initial state is already derived from the real viewport;
+            // animating from "closed" on mount causes a visible drawer flash
+            // when a mobile PWA restores the admin route.
+            initial={false}
             animate={sidebarOpen ? "open" : "closed"}
             exit="closed"
             className="km-admin-panel-nav"
