@@ -425,6 +425,9 @@ const DashboardContent = () => {
   const [metricsRes, setMetricsRes] = useState<QueryMetricsResponse | null>(
     null,
   );
+  const [trafficRes, setTrafficRes] = useState<QueryMetricsResponse | null>(
+    null,
+  );
   const [pingStats, setPingStats] = useState<PingMetricStat[]>([]);
   const [pingTasks, setPingTasks] = useState<PublicPingTask[]>([]);
   const [renewingUuid, setRenewingUuid] = useState<string | null>(null);
@@ -456,7 +459,7 @@ const DashboardContent = () => {
       );
   }, [nodeList, renewedUuids]);
 
-  const fetchMetrics = useCallback(async () => {
+  const fetchTraffic = useCallback(async () => {
     const now = new Date();
     const start = new Date(now.getTime() - 24 * 3600 * 1000);
     try {
@@ -466,9 +469,6 @@ const DashboardContent = () => {
           ...NET_TOTAL_METRIC_KEYS,
           "traffic.up",
           "traffic.down",
-          ...CPU_METRIC_KEYS,
-          ...MEM_METRIC_KEYS,
-          PING_LATENCY_METRIC,
         ],
         start: start.toISOString(),
         end: now.toISOString(),
@@ -478,6 +478,30 @@ const DashboardContent = () => {
           "traffic.down": "sum",
           "net.total.up": "last",
           "net.total.down": "last",
+        },
+        max_points: 96,
+        fill_empty: true,
+      });
+      setTrafficRes(res ?? null);
+    } catch (e) {
+      console.error("Failed to fetch dashboard traffic:", e);
+    }
+  }, [call]);
+
+  const fetchMetrics = useCallback(async () => {
+    const now = new Date();
+    const start = new Date(now.getTime() - 24 * 3600 * 1000);
+    try {
+      const res = await call<any, QueryMetricsResponse>("public:queryMetrics", {
+        metric_keys: [
+          ...CPU_METRIC_KEYS,
+          ...MEM_METRIC_KEYS,
+          PING_LATENCY_METRIC,
+        ],
+        start: start.toISOString(),
+        end: now.toISOString(),
+        aggregation: "p95",
+        aggregation_by_metric: {
           "cpu.usage": "avg",
           "memory.used": "avg",
         },
@@ -533,6 +557,7 @@ const DashboardContent = () => {
       // ready. LiveDataProvider supplies the online status stream, while
       // NodeListProvider loads the node metadata on shell mount.
       const requests: Promise<unknown>[] = [
+        fetchTraffic(),
         fetchMetrics(),
         fetchDbSize(),
         fetchPingStats(),
@@ -544,15 +569,24 @@ const DashboardContent = () => {
     } finally {
       setRefreshing(false);
     }
-  }, [refresh, fetchMetrics, fetchDbSize, fetchPingStats]);
+  }, [refresh, fetchTraffic, fetchMetrics, fetchDbSize, fetchPingStats]);
 
   useEffect(() => {
     void fetchAll();
   }, [fetchAll]);
 
+  // Match the original dashboard cadence for the historical traffic card;
+  // live online status remains on its independent 2-second stream.
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void fetchTraffic();
+    }, 60_000);
+    return () => window.clearInterval(interval);
+  }, [fetchTraffic]);
+
   // 由一次 queryMetrics 响应派生各指标卡数据；nodeList 就绪后
   // nodeNameMap/memTotalMap 变化会自动重算，无需再次请求。
-  const traffic = useMemo(() => computeTrafficSummary(metricsRes), [metricsRes]);
+  const traffic = useMemo(() => computeTrafficSummary(trafficRes), [trafficRes]);
 
   const topCpu = useMemo<TopRankItem[]>(
     () =>
