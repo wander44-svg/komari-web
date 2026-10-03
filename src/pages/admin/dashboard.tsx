@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Badge,
   Button,
@@ -415,6 +421,7 @@ const Dashboard = () => {
 const DashboardContent = () => {
   const { t } = useTranslation();
   const { nodeList, isLoading, error, refresh } = useNodeList();
+  const { live_data } = useLiveData();
   const { call } = useRPC2Call();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -432,6 +439,7 @@ const DashboardContent = () => {
   const [pingTasks, setPingTasks] = useState<PublicPingTask[]>([]);
   const [renewingUuid, setRenewingUuid] = useState<string | null>(null);
   const [renewedUuids, setRenewedUuids] = useState<Set<string>>(new Set());
+  const initialAnalyticsStartedRef = useRef(false);
 
   const nodeNameMap = useMemo(
     () => new Map((nodeList ?? []).map((node) => [node.uuid, node.name])),
@@ -572,7 +580,21 @@ const DashboardContent = () => {
   }, [refresh, fetchTraffic, fetchMetrics, fetchDbSize, fetchPingStats]);
 
   useEffect(() => {
+    if (initialAnalyticsStartedRef.current || !live_data) return;
+    initialAnalyticsStartedRef.current = true;
     void fetchAll();
+  }, [fetchAll, live_data]);
+
+  // If the first live-status request is unavailable, do not leave the rest of
+  // the dashboard blank forever. In the normal path the ref is set by the
+  // first live response, so this timer becomes a no-op.
+  useEffect(() => {
+    const fallback = window.setTimeout(() => {
+      if (initialAnalyticsStartedRef.current) return;
+      initialAnalyticsStartedRef.current = true;
+      void fetchAll();
+    }, 1500);
+    return () => window.clearTimeout(fallback);
   }, [fetchAll]);
 
   // Match the original dashboard cadence for the historical traffic card;
