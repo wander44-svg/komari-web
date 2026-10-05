@@ -26,15 +26,23 @@ export const OfflineNotificationProvider: React.FC<{ children: React.ReactNode }
   const refresh = async () => {
     if (firstLoad.current) setLoading(true);
     try {
-      const response = await fetch("/api/admin/notification/offline");
+      // This endpoint is read immediately after a create/update.  Do not let
+      // the browser or an installed PWA return the pre-update empty list.
+      const response = await fetch(`/api/admin/notification/offline?_=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch offline notifications");
       }
       const data = await response.json();
       setOfflineNotification(data.data || []);
+      setError(null);
     } catch (error) {
       console.error("Error fetching offline notifications:", error);
-      setError(error instanceof Error ? error : new Error(String(error)));
+      const refreshError = error instanceof Error ? error : new Error(String(error));
+      setError(refreshError);
+      throw refreshError;
     } finally {
       if (firstLoad.current) {
         setLoading(false);
@@ -44,7 +52,7 @@ export const OfflineNotificationProvider: React.FC<{ children: React.ReactNode }
   };
 
   React.useEffect(() => {
-    refresh();
+    void refresh().catch(() => undefined);
   }, []);
 
   return (

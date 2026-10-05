@@ -421,20 +421,19 @@ const ActionButtons = ({
                   },
                 ]),
               })
-                .then((res) => {
+                .then(async (res) => {
                   if (!res.ok) {
-                    toast.error(
+                    throw new Error(
                       "Failed to save offline notification settings: " +
                         res.statusText
                     );
                   }
+                  await res.json();
+                  // Refresh before closing. This is important for a newly
+                  // deployed node whose notification row was just created.
+                  await refresh();
                   toast.success(t("common.updated_successfully"));
-                  return res.json();
-                })
-                .then(() => {
                   setEditOpen(false);
-                  refresh();
-                  setEditSaving(false);
                 })
                 .catch((error) => {
                   console.error(
@@ -442,6 +441,9 @@ const ActionButtons = ({
                     error
                   );
                   toast.error(t("common.error", { message: error.message }));
+                })
+                .finally(() => {
+                  setEditSaving(false);
                 });
             }}
             onCancel={() => setEditOpen(false)}
