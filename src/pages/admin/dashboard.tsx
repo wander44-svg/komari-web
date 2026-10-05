@@ -21,7 +21,6 @@ import {
   YAxis,
 } from "recharts";
 import { useNodeList, type NodeBasicInfo } from "@/contexts/NodeListContext";
-import { LiveDataProvider, useLiveData } from "@/contexts/LiveDataContext";
 import { useRPC2Call } from "@/contexts/RPC2Context";
 import { formatBytes } from "@/utils/unitHelper";
 import Loading from "@/components/loading";
@@ -402,14 +401,10 @@ const computeTopAverageItems = (
 const miniChartCache = new Map<string, MetricSeries[]>();
 
 const Dashboard = () => {
-  // Keep the dashboard on the same live-status stream as the original UI.
-  // This avoids a second getNodesLatestStatus request and keeps the online
-  // summary updated while the page is open.
-  return (
-    <LiveDataProvider>
-      <DashboardContent />
-    </LiveDataProvider>
-  );
+  // LiveDataProvider is mounted once at the application shell for the other
+  // pages. The dashboard keeps its original direct latest-status request so
+  // the online card can render on the original first-load path.
+  return <DashboardContent />;
 };
 
 const DashboardContent = () => {
@@ -417,6 +412,7 @@ const DashboardContent = () => {
   const { nodeList, isLoading, error, refresh } = useNodeList();
   const { call } = useRPC2Call();
 
+  const [latest, setLatest] = useState<Record<string, any> | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [dbInfo, setDbInfo] = useState<{
     main: number | null;
@@ -432,6 +428,33 @@ const DashboardContent = () => {
   const [pingTasks, setPingTasks] = useState<PublicPingTask[]>([]);
   const [renewingUuid, setRenewingUuid] = useState<string | null>(null);
   const [renewedUuids, setRenewedUuids] = useState<Set<string>>(new Set());
+
+  const onlineSet = useMemo(() => {
+    const out = new Set<string>();
+    if (latest) {
+      for (const [uuid, value] of Object.entries(latest)) {
+        if ((value as any)?.online) out.add(uuid);
+      }
+    }
+    return out;
+  }, [latest]);
+
+  const stats = useMemo(() => {
+    const nodes = nodeList ?? [];
+    const online = onlineSet.size;
+    const total = nodes.length;
+    return {
+      total,
+      online,
+      offline: total - online,
+      onlineRate: total ? (online / total) * 100 : 0,
+    };
+  }, [nodeList, onlineSet]);
+
+  const offlineNodes = useMemo(
+    () => (nodeList ?? []).filter((node) => !onlineSet.has(node.uuid)),
+    [nodeList, onlineSet],
+  );
 
   const nodeNameMap = useMemo(
     () => new Map((nodeList ?? []).map((node) => [node.uuid, node.name])),
@@ -458,6 +481,17 @@ const DashboardContent = () => {
           new Date(a.expired_at).getTime() - new Date(b.expired_at).getTime(),
       );
   }, [nodeList, renewedUuids]);
+
+  const fetchLatest = useCallback(async () => {
+    try {
+      const result = await call<unknown, Record<string, any>>(
+        "common:getNodesLatestStatus",
+      );
+      setLatest(result ?? null);
+    } catch (e) {
+      console.error("Failed to fetch latest status:", e);
+    }
+  }, [call]);
 
   const fetchTraffic = useCallback(async () => {
     const now = new Date();
@@ -552,11 +586,11 @@ const DashboardContent = () => {
     setRefreshing(true);
     miniChartCache.clear();
     try {
-      // Keep the original dashboard loading order: all independent data
-      // requests start together and each card fills when its own response is
-      // ready. LiveDataProvider supplies the online status stream, while
-      // NodeListProvider loads the node metadata on shell mount.
+      // Keep the dashboard requests independent. The online card is supplied
+      // by the same direct latest-status request as the original dashboard;
+      // analytics remains independent and cannot delay that card's data.
       const requests: Promise<unknown>[] = [
+        fetchLatest(),
         fetchTraffic(),
         fetchMetrics(),
         fetchDbSize(),
@@ -569,7 +603,14 @@ const DashboardContent = () => {
     } finally {
       setRefreshing(false);
     }
-  }, [refresh, fetchTraffic, fetchMetrics, fetchDbSize, fetchPingStats]);
+  }, [
+    refresh,
+    fetchLatest,
+    fetchTraffic,
+    fetchMetrics,
+    fetchDbSize,
+    fetchPingStats,
+  ]);
 
   useEffect(() => {
     void fetchAll();
@@ -647,6 +688,35 @@ const DashboardContent = () => {
     } finally {
       setRenewingUuid(null);
     }
+  };
+
+  const health = useMemo(() => {
+    if (stats.total === 0) {
+      return { level: "empty" as const, color: "gray" as const };
+    }
+    if (stats.onlineRate >= 95) {
+      return { level: "healthy" as const, color: "green" as const };
+    }
+    if (stats.onlineRate >= 75) {
+      return { level: "warning" as const, color: "orange" as const };
+    }
+    return { level: "danger" as const, color: "red" as const };
+  }, [stats.total, stats.onlineRate]);
+
+  const healthDesc = {
+    empty: t("dashboard.health.emptyDesc", "No servers have been added yet."),
+    healthy: t(
+      "dashboard.health.healthyDesc",
+      "All servers are online and healthy.",
+    ),
+    warning: t(
+      "dashboard.health.warningDesc",
+      "Some servers are offline, please check.",
+    ),
+    danger: t(
+      "dashboard.health.dangerDesc",
+      "Most servers are offline, cluster is abnormal.",
+    ),
   };
 
   const chartConfig = {
@@ -852,7 +922,70 @@ const DashboardContent = () => {
       </Flex>
 
       <Flex gap="4" wrap="wrap">
-        <DashboardOnlineCard nodeList={nodeList} />
+        <Card className="km-dashboard-card flex-1 min-w-72">
+          <Flex gap="4" align="center">
+            <ProgressRing
+              percent={stats.onlineRate}
+              color={health.color}
+              ariaLabel={t(
+                "dashboard.onlineRateAria",
+                "{{percent}}% of servers online",
+                { percent: stats.onlineRate.toFixed(0) },
+              )}
+            />
+            <Flex direction="column" gap="2" style={{ minWidth: 0 }}>
+              <Text size="4" weight="bold" className="truncate">
+                {healthDesc[health.level]}
+              </Text>
+              <Flex direction="column" gap="1">
+                <Text size="2" color="gray">
+                  {t("dashboard.overview", "Overview")}
+                </Text>
+                <Text size="2" weight="medium">
+                  {t("dashboard.onlineNodes", "Online {{online}}/{{total}}", {
+                    online: stats.online,
+                    total: stats.total,
+                  })}
+                </Text>
+                <Tips
+                  side="right"
+                  className="mr-auto"
+                  ariaLabel={t("dashboard.offlineListAria", "Offline servers")}
+                  trigger={
+                    <Text
+                      size="2"
+                      weight="medium"
+                      color={stats.offline > 0 ? "red" : "gray"}
+                      className={
+                        offlineNodes.length > 0
+                          ? "cursor-pointer hover:underline"
+                          : ""
+                      }
+                    >
+                      {t("dashboard.offlineNodes", "Offline {{offline}}", {
+                        offline: stats.offline,
+                      })}
+                    </Text>
+                  }
+                >
+                  {offlineNodes.length > 0 ? (
+                    <Flex direction="column" gap="1">
+                      {offlineNodes.map((node) => (
+                        <Text key={node.uuid} size="2">
+                          {node.name}
+                        </Text>
+                      ))}
+                    </Flex>
+                  ) : (
+                    <Text size="2">
+                      {t("dashboard.noOfflineNodes", "All servers are online")}
+                    </Text>
+                  )}
+                </Tips>
+              </Flex>
+            </Flex>
+          </Flex>
+        </Card>
 
         <Card className="km-dashboard-card flex-1 min-w-64">
           <Flex direction="column" gap="3">
@@ -1335,129 +1468,6 @@ const DashboardContent = () => {
         </Flex>
       </Card>
     </Flex>
-  );
-};
-
-const DashboardOnlineCard = ({
-  nodeList,
-}: {
-  nodeList: NodeBasicInfo[] | null;
-}) => {
-  const { t } = useTranslation();
-  const { live_data } = useLiveData();
-  const liveData = live_data?.data;
-  const onlineSet = useMemo(
-    () => new Set(liveData?.online ?? []),
-    [liveData],
-  );
-  const stats = useMemo(() => {
-    const nodes = nodeList ?? [];
-    const online = onlineSet.size;
-    const total = nodes.length;
-    return {
-      total,
-      online,
-      offline: total - online,
-      onlineRate: total ? (online / total) * 100 : 0,
-    };
-  }, [nodeList, onlineSet]);
-  const offlineNodes = useMemo(
-    () => (nodeList ?? []).filter((node) => !onlineSet.has(node.uuid)),
-    [nodeList, onlineSet],
-  );
-  const health = useMemo(() => {
-    if (stats.total === 0) {
-      return { level: "empty" as const, color: "gray" as const };
-    }
-    if (stats.onlineRate >= 95) {
-      return { level: "healthy" as const, color: "green" as const };
-    }
-    if (stats.onlineRate >= 75) {
-      return { level: "warning" as const, color: "orange" as const };
-    }
-    return { level: "danger" as const, color: "red" as const };
-  }, [stats.total, stats.onlineRate]);
-  const healthDesc = {
-    empty: t("dashboard.health.emptyDesc", "No servers have been added yet."),
-    healthy: t(
-      "dashboard.health.healthyDesc",
-      "All servers are online and healthy.",
-    ),
-    warning: t(
-      "dashboard.health.warningDesc",
-      "Some servers are offline, please check.",
-    ),
-    danger: t(
-      "dashboard.health.dangerDesc",
-      "Most servers are offline, cluster is abnormal.",
-    ),
-  };
-
-  return (
-    <Card className="km-dashboard-card flex-1 min-w-72">
-      <Flex gap="4" align="center">
-        <ProgressRing
-          percent={stats.onlineRate}
-          color={health.color}
-          ariaLabel={t(
-            "dashboard.onlineRateAria",
-            "{{percent}}% of servers online",
-            { percent: stats.onlineRate.toFixed(0) },
-          )}
-        />
-        <Flex direction="column" gap="2" style={{ minWidth: 0 }}>
-          <Text size="4" weight="bold" className="truncate">
-            {healthDesc[health.level]}
-          </Text>
-          <Flex direction="column" gap="1">
-            <Text size="2" color="gray">
-              {t("dashboard.overview", "Overview")}
-            </Text>
-            <Text size="2" weight="medium">
-              {t("dashboard.onlineNodes", "Online {{online}}/{{total}}", {
-                online: stats.online,
-                total: stats.total,
-              })}
-            </Text>
-            <Tips
-              side="right"
-              className="mr-auto"
-              ariaLabel={t("dashboard.offlineListAria", "Offline servers")}
-              trigger={
-                <Text
-                  size="2"
-                  weight="medium"
-                  color={stats.offline > 0 ? "red" : "gray"}
-                  className={
-                    offlineNodes.length > 0
-                      ? "cursor-pointer hover:underline"
-                      : ""
-                  }
-                >
-                  {t("dashboard.offlineNodes", "Offline {{offline}}", {
-                    offline: stats.offline,
-                  })}
-                </Text>
-              }
-            >
-              {offlineNodes.length > 0 ? (
-                <Flex direction="column" gap="1">
-                  {offlineNodes.map((node) => (
-                    <Text key={node.uuid} size="2">
-                      {node.name}
-                    </Text>
-                  ))}
-                </Flex>
-              ) : (
-                <Text size="2">
-                  {t("dashboard.noOfflineNodes", "All servers are online")}
-                </Text>
-              )}
-            </Tips>
-          </Flex>
-        </Flex>
-      </Flex>
-    </Card>
   );
 };
 
