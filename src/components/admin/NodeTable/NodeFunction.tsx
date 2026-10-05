@@ -59,7 +59,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     }
 
     return (
-      `wget -qO- https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/tags/1.4.4/install.sh | sudo bash -s -- ` +
+      `wget -qO- https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-optimal/install.sh | sudo bash -s -- ` +
       quoteShellArgs(args)
     );
   };

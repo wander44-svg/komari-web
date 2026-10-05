@@ -730,7 +730,7 @@ function GenerateCommandButton({
       args.push(rotateVal);
     }
     const scriptUrl =
-      "https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/tags/1.4.4/install.sh";
+      "https://raw.githubusercontent.com/wander44-svg/komari-agent/refs/heads/komari-optimal/install.sh";
     return (
       `wget -qO- ${quoteShellArg(scriptUrl)} | sudo bash -s -- ` +
       quoteShellArgs(args)
