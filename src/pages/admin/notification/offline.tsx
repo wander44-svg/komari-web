@@ -144,7 +144,7 @@ const InnerLayout = ({ embedded = false }: { embedded?: boolean }) => {
   const [batchForm, setBatchForm] = React.useState({
     enable: true,
     cooldown: 1800,
-    grace_period: 300,
+    grace_period: 180,
   });
 
   // 批量修改
@@ -240,7 +240,7 @@ const InnerLayout = ({ embedded = false }: { embedded?: boolean }) => {
                 setBatchForm({
                   enable: first?.enable ?? true,
                   cooldown: first?.cooldown ?? 1800,
-                  grace_period: first?.grace_period ?? 300,
+                  grace_period: first?.grace_period ?? 180,
                 });
               }}
               disabled={batchLoading || selected.length === 0}
@@ -346,7 +346,7 @@ const OfflineNotificationTable = ({
               </TableCell> */}
               <TableCell>
                 {offlineNotification.find((n) => n.client === node.uuid)
-                  ?.grace_period || 300}
+                  ?.grace_period || 180}
                 {t("nodeCard.time_second")}
               </TableCell>
               <TableCell>
@@ -406,7 +406,7 @@ const ActionButtons = ({
             initialValues={{
               enable: offlineNotifications?.enable ?? true,
               cooldown: offlineNotifications?.cooldown ?? 1800,
-              grace_period: offlineNotifications?.grace_period ?? 300,
+              grace_period: offlineNotifications?.grace_period ?? 180,
             }}
             loading={editSaving}
             onSubmit={(values) => {
