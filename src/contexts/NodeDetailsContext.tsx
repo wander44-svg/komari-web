@@ -23,6 +23,7 @@ export type NodeDetail = {
   public_remark: string;
   group: string | undefined;
   billing_cycle: number;
+  month_rotate: number;
   expired_at: string;
   created_at: string;
   updated_at: string;

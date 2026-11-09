@@ -37,6 +37,8 @@ export type NodeBasicInfo = {
   tags: string;
   /** 账单周期（天）*/
   billing_cycle: number;
+  /** Agent 网络统计月重置日（0 表示禁用） */
+  month_rotate: number;
   /** 货币 */
   currency: string;
   /** 分组 */
@@ -129,6 +131,7 @@ export const NodeListProvider: React.FC<{ children: React.ReactNode }> = ({
           price: n.price ?? 0,
           tags: n.tags ?? "",
           billing_cycle: n.billing_cycle ?? 0,
+          month_rotate: n.month_rotate ?? 0,
           currency: n.currency ?? "",
           group: n.group ?? "",
           traffic_limit: n.traffic_limit ?? 0,
